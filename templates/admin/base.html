@@ -7,12 +7,11 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,800|Roboto:400,500,700" rel="stylesheet">
     <link type="text/css" href="/assets/css/theme.css" rel="stylesheet">
     <link type="text/css" href="/assets/css/demo.css" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/vendor/animate/animate.min.css">
     <style>
-        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 240px; background: #1e1e2d; z-index: 100; padding-top: 20px; }
+        .sidebar { background: #1e1e2d !important; border-right-color: #2a2a3d !important; }
         .sidebar .sidebar-brand { padding: 15px 20px; margin-bottom: 20px; }
         .sidebar .sidebar-brand a { color: #fff; font-size: 1.2rem; text-decoration: none; }
-        .sidebar .navigation { list-style: none; padding: 0; }
+        .sidebar .navigation { list-style: none; padding: 0; margin: 0; }
         .sidebar .navigation-item { padding: 0; }
         .sidebar .navigation-link { display: block; padding: 12px 20px; color: #a2a3b7; text-decoration: none; transition: all 0.2s; }
         .sidebar .navigation-link:hover, .sidebar .navigation-link.active { color: #fff; background: rgba(255,255,255,0.06); }
@@ -29,14 +28,20 @@
         .card-table .card-header { background: #fff; border-bottom: 1px solid #eee; border-radius: 10px 10px 0 0 !important; padding: 15px 20px; }
         .btn-action { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
         .table th { border-top: none; font-size: 0.8rem; text-transform: uppercase; color: #8898aa; font-weight: 600; }
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
+
+        .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #525f7f; padding: 0 10px; line-height: 1; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1040; }
+        body.sidebar-open .sidebar-overlay { display: block; }
+
+        @media (max-width: 1199px) {
+            .menu-toggle { display: inline-block; }
             .main-content { margin-left: 0; }
         }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
+<body class="">
+    <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('toggled');document.body.classList.remove('sidebar-open')"></div>
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <a href="/admin"><i class="fas fa-crown mr-2"></i>成绩管理系统</a>
         </div>
@@ -50,7 +55,8 @@
 
     <div class="main-content">
         <div class="topbar">
-            <div>
+            <div class="d-flex align-items-center">
+                <button class="menu-toggle mr-2" onclick="document.getElementById('sidebar').classList.toggle('toggled');document.body.classList.toggle('sidebar-open')">&#9776;</button>
                 <h5 class="mb-0" id="page-title">仪表盘</h5>
             </div>
             <div class="d-flex align-items-center">

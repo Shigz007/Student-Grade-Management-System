@@ -43,6 +43,11 @@ var api = {
     getCourses: function(params) { return this.get('/api/courses', params); },
     getColleges: function() { return this.get('/api/colleges'); },
     getNextStudentNo: function(params) { return this.get('/api/students/next-no', params); },
+    getClasses: function(params) { return this.get('/api/students/classes', params); },
+
+    // Auth
+    updateProfile: function(data) { return this.put('/api/me', data); },
+    changePassword: function(data) { return this.put('/api/me/password', data); },
 
     // Stats
     getStats: function(params) { return this.get('/api/grades/stats', params); }

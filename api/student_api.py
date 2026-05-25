@@ -40,17 +40,54 @@ def get_next_student_no():
     college = request.args.get('college', '01')
     major = request.args.get('major', '01')
     cls = request.args.get('class', '01')
-    prefix = year[2:] + college + major + cls
+
+    MAX_PER_CLASS = 50
+
+    # Auto-roll to next class if the requested one is full
+    while True:
+        class_prefix = year[2:] + college + major + cls
+        count = query(
+            "SELECT COUNT(*) as cnt FROM students WHERE student_no LIKE ?",
+            (f'{class_prefix}%',)
+        )[0]['cnt']
+
+        if count < MAX_PER_CLASS:
+            break
+        cls = str(int(cls) + 1).zfill(2)
+        if int(cls) > 99:
+            return jsonify({'error': '该专业所有班级已满（每班50人）'}), 400
+
     existing = query(
         "SELECT student_no FROM students WHERE student_no LIKE ? ORDER BY student_no DESC LIMIT 1",
-        (f'{prefix}%',)
+        (f'{class_prefix}%',)
     )
     if existing:
         last_seq = int(existing[0]['student_no'][-2:])
         seq = str(last_seq + 1).zfill(2)
     else:
         seq = '01'
-    return jsonify({'student_no': prefix + seq, 'class_name': f'{prefix[:6]}班'})
+
+    return jsonify({
+        'student_no': class_prefix + seq,
+        'class_name': f'{class_prefix[:6]}班',
+        'class_seq': cls
+    })
+
+
+@student_bp.route('/api/students/classes', methods=['GET'])
+@teacher_or_admin
+def get_classes():
+    year = request.args.get('year', '')
+    college = request.args.get('college', '')
+    major = request.args.get('major', '')
+    if not year or not college or not major:
+        return jsonify([])
+    prefix = year[2:] + college + major
+    rows = query(
+        "SELECT SUBSTR(student_no, 7, 2) AS class_seq, COUNT(*) AS cnt FROM students WHERE student_no LIKE ? GROUP BY class_seq ORDER BY class_seq",
+        (f'{prefix}%',)
+    )
+    return jsonify([{'class_seq': r['class_seq'], 'count': r['cnt']} for r in rows])
 
 
 @student_bp.route('/api/students', methods=['POST'])

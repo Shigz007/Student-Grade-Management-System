@@ -85,7 +85,7 @@ $(function() {
         $('#stat-students').text(students.length);
         var classes = {};
         students.forEach(function(s) {
-            var c = s.class_name || '未分班';
+            var c = s.student_no ? s.student_no.substring(6,8) + '班' : '未分班';
             classes[c] = (classes[c] || 0) + 1;
         });
         var html = '';

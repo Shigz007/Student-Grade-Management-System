@@ -10,7 +10,7 @@
     </div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
-            <thead><tr><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>电话</th><th>邮箱</th><th>操作</th></tr></thead>
+            <thead><tr><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>电话</th><th>操作</th></tr></thead>
             <tbody id="student-table"></tbody>
         </table>
     </div>
@@ -24,7 +24,7 @@
                 <input type="hidden" id="edit-student-id">
                 <div class="form-row">
                     <div class="form-group col-md-6"><label>入学年份</label>
-                        <select class="form-control" id="form-enrollment-year"><option value="">请选择</option></select>
+                        <input type="text" class="form-control" id="form-enrollment-year" readonly>
                     </div>
                     <div class="form-group col-md-6"><label>学院</label>
                         <select class="form-control" id="form-college"><option value="">请选择</option></select>
@@ -34,20 +34,16 @@
                     <div class="form-group col-md-6"><label>专业</label>
                         <select class="form-control" id="form-major"><option value="">请先选择学院</option></select>
                     </div>
-                    <div class="form-group col-md-6"><label>班级序号</label>
-                        <input type="text" class="form-control" id="form-class-seq" placeholder="如：01" maxlength="2">
+                    <div class="form-group col-md-6"><label>班级序号 <small class="text-muted">（自动分配，01起满50人自动换班）</small></label>
+                        <input type="text" class="form-control" id="form-class-seq" readonly>
                     </div>
                 </div>
-                <div class="form-group"><label>学号 <small class="text-muted">（选择年份/学院/专业/班级后自动生成）</small></label>
+                <div class="form-group"><label>学号 <small class="text-muted">（自动生成）</small></label>
                     <input type="text" class="form-control" id="form-student-no" readonly required>
                 </div>
                 <div class="form-group"><label>姓名</label><input type="text" class="form-control" id="form-name" required></div>
                 <div class="form-group"><label>性别</label><select class="form-control" id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
-                <div class="form-group"><label>班级名称 <small class="text-muted">（自动生成）</small></label><input type="text" class="form-control" id="form-class-name" readonly></div>
-                <div class="form-row">
-                    <div class="form-group col-md-6"><label>电话</label><input type="text" class="form-control" id="form-phone"></div>
-                    <div class="form-group col-md-6"><label>邮箱</label><input type="text" class="form-control" id="form-email"></div>
-                </div>
+                <div class="form-group"><label>电话</label><input type="text" class="form-control" id="form-phone"></div>
                 <hr>
                 <div class="bg-light p-3 rounded" id="account-section">
                     <h6 class="text-muted mb-3"><i class="fas fa-user-lock mr-1"></i>系统账号</h6>
@@ -76,32 +72,31 @@ $(function() {
 
     $('#search-input').on('input', loadStudents);
 
-    // Auto-fill account name from student name
     $('#form-name').on('input', function() {
         $('#form-account-name').val($(this).val());
     });
 
-    // College change → update major dropdown
     $('#form-college').on('change', function() {
         var college = $(this).val();
         var $major = $('#form-major');
         $major.empty();
-        if (!college) { $major.html('<option value="">请先选择学院</option>'); refreshStudentNo(); return; }
+        if (!college) { $major.html('<option value="">请先选择学院</option>'); clearStudentNo(); return; }
         var list = MAJORS[college] || [];
         $major.append('<option value="">请选择专业</option>');
         list.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
-        refreshStudentNo();
+        clearStudentNo();
     });
 
-    // Year / major / class-seq change → refresh student_no
-    $('#form-enrollment-year, #form-major, #form-class-seq').on('change input', refreshStudentNo);
+    $('#form-major').on('change', refreshStudentNo);
 
     $('#btn-add-student').click(function() {
         $('#edit-student-id').val('');
         $('#student-modal-title').text('新增学生');
-        $('#form-student-no,#form-name,#form-gender,#form-class-name,#form-phone,#form-email,#form-class-seq').val('');
-        $('#form-enrollment-year,#form-college').val('');
+        $('#form-name,#form-gender,#form-phone').val('');
+        $('#form-college').val('');
+        $('#form-enrollment-year').val(new Date().getFullYear());
         $('#form-major').html('<option value="">请先选择学院</option>');
+        clearStudentNo();
         $('#form-account-name').val('');
         $('#account-section').show();
         $('#student-modal').modal('show');
@@ -116,9 +111,9 @@ $(function() {
             enrollment_year: $('#form-enrollment-year').val(),
             college_code: $('#form-college').val(),
             major_code: $('#form-major').val(),
-            class_name: $('#form-class-name').val().trim(),
+            class_name: '',
             phone: $('#form-phone').val().trim(),
-            email: $('#form-email').val().trim()
+            email: ''
         };
         if (!data.student_no || !data.name) { alert('学号和姓名不能为空'); return; }
         if (!data.enrollment_year || !data.college_code || !data.major_code) { alert('请选择入学年份、学院和专业'); return; }
@@ -138,15 +133,14 @@ $(function() {
                 $('#student-modal-title').text('编辑学生');
                 $('#form-enrollment-year').val(s.enrollment_year || '');
                 $('#form-college').val(s.college_code || '').trigger('change');
-                // After college change loads majors, set major value
-                setTimeout(function() { $('#form-major').val(s.major_code || ''); }, 200);
-                $('#form-class-name').val(s.class_name || '');
+                setTimeout(function() {
+                    $('#form-major').val(s.major_code || '');
+                }, 200);
                 $('#form-student-no').val(s.student_no);
+                $('#form-class-seq').val(s.student_no.substring(6, 8));
                 $('#form-name').val(s.name);
                 $('#form-gender').val(s.gender);
                 $('#form-phone').val(s.phone || '');
-                $('#form-email').val(s.email || '');
-                $('#form-class-seq').val('');
                 $('#account-section').hide();
                 $('#student-modal').modal('show');
             }
@@ -158,13 +152,14 @@ $(function() {
         api.deleteStudent($(this).data('id')).then(function() { loadStudents(); });
     });
 
-    function initForm() {
-        // Enrollment years 2020-2030
-        var yearHtml = '<option value="">请选择</option>';
-        for (var y = 2020; y <= 2030; y++) { yearHtml += '<option value="' + y + '">' + y + '</option>'; }
-        $('#form-enrollment-year').html(yearHtml);
+    function clearStudentNo() {
+        $('#form-student-no').val('');
+        $('#form-class-seq').val('');
+    }
 
-        // Load colleges
+    function initForm() {
+        $('#form-enrollment-year').val(new Date().getFullYear());
+
         api.getColleges().then(function(colleges) {
             var html = '<option value="">请选择学院</option>';
             colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.code + ' - ' + c.name + '</option>'; });
@@ -176,11 +171,12 @@ $(function() {
         var year = $('#form-enrollment-year').val();
         var college = $('#form-college').val();
         var major = $('#form-major').val();
-        var cls = $('#form-class-seq').val().trim() || '01';
-        if (!year || !college || !major) { $('#form-student-no').val(''); $('#form-class-name').val(''); return; }
-        api.getNextStudentNo({ year: year, college: college, major: major, 'class': cls }).then(function(res) {
+        if (!year || !college || !major) { clearStudentNo(); return; }
+        // Always start from class 01, backend auto-rolls if full
+        api.getNextStudentNo({ year: year, college: college, major: major, 'class': '01' }).then(function(res) {
+            if (res.error) { alert(res.error); return; }
             $('#form-student-no').val(res.student_no);
-            $('#form-class-name').val(res.class_name);
+            $('#form-class-seq').val(res.class_seq);
         });
     }
 
@@ -189,10 +185,10 @@ $(function() {
         api.getStudents(search ? { search: search } : {}).then(function(students) {
             var html = '';
             students.forEach(function(s) {
-                html += '<tr><td>' + s.student_no + '</td><td>' + s.name + '</td><td>' + (s.gender || '-') + '</td><td>' + (s.class_name || '-') + '</td><td>' + (s.phone || '-') + '</td><td>' + (s.email || '-') + '</td>';
+                html += '<tr><td>' + s.student_no + '</td><td>' + s.name + '</td><td>' + (s.gender || '-') + '</td><td>' + (s.student_no ? s.student_no.substring(6,8) : '-') + '</td><td>' + (s.phone || '-') + '</td>';
                 html += '<td><button class="btn btn-sm btn-info btn-action mr-1 btn-edit" data-id="' + s.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete" data-id="' + s.id + '"><i class="fas fa-trash"></i></button></td></tr>';
             });
-            $('#student-table').html(html || '<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>');
+            $('#student-table').html(html || '<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>');
         });
     }
 });

@@ -1,6 +1,7 @@
-"""Seed script: populate database with sample data."""
+"""Seed script: populate database with fresh random sample data."""
+import random
 from werkzeug.security import generate_password_hash
-from db import init_db, get_db, execute, query
+from db import init_db, execute, query
 
 init_db()
 
@@ -77,24 +78,68 @@ for c in courses:
         execute("INSERT INTO courses (code, name, college_name, college_code) VALUES (?,?,?,?)", c)
 print(f"Courses seeded: {len(courses)}")
 
-# Students — sample data with proper student_no format
-students_data = [
-    ('2401010112', '张三', '男', '2024', '01', '01', '计算机2401', '13800001001', 'zhangsan@example.com'),
-    ('2401010123', '李四', '女', '2024', '01', '01', '计算机2401', '13800001002', 'lisi@example.com'),
-    ('2401020214', '王五', '男', '2024', '01', '02', '软件2402', '13800001003', 'wangwu@example.com'),
-    ('2401020215', '赵六', '女', '2024', '01', '02', '软件2402', '13800001004', 'zhaoliu@example.com'),
-    ('2402030318', '孙七', '男', '2024', '02', '03', '统计2403', '13800001005', 'sunqi@example.com'),
-    ('2403010409', 'student1', '男', '2024', '03', '01', '电子2401', '13800001006', 'student1@example.com'),
-    ('2405010511', 'student2', '女', '2024', '05', '01', '英语2401', '13800001007', 'student2@example.com'),
-]
+# Fresh random Chinese names
+SURNAMES = ['王', '李', '张', '刘', '陈', '杨', '黄', '赵', '吴', '周', '徐', '孙', '马', '朱', '胡', '林', '郭', '何', '高', '罗',
+            '郑', '梁', '谢', '宋', '唐', '许', '韩', '冯', '邓', '曹', '彭', '曾', '萧', '田', '董', '潘', '袁', '蔡', '蒋', '余',
+            '于', '杜', '叶', '程', '苏', '魏', '吕', '丁', '任', '沈', '姚', '卢', '姜', '崔', '钟', '谭', '陆', '汪', '范', '金']
+GIVEN_MALE = ['伟', '强', '磊', '军', '勇', '杰', '涛', '明', '辉', '鹏', '浩', '峰', '宇', '轩', '文', '博', '超', '毅', '晨', '睿',
+              '飞', '彬', '豪', '哲', '恒', '诚', '安', '宁', '龙', '威', '阳', '志', '健', '凯', '俊', '刚', '亮', '平', '毅', '翔']
+GIVEN_FEMALE = ['芳', '敏', '静', '丽', '婷', '雪', '琳', '玲', '瑶', '颖', '娜', '莉', '娟', '霞', '萍', '红', '梅', '洁', '蓉', '燕',
+                '婷', '怡', '欣', '雨', '思', '文', '瑜', '婉', '悦', '蕾', '菲', '兰', '慧', '云', '佳', '秀', '晶', '馨', '月', '凤']
+GIVEN_NEUTRAL = ['子涵', '梓轩', '雨桐', '浩然', '一鸣', '天佑', '俊杰', '思远', '乐天', '逸飞', '星辰', '沐阳', '若兮', '瑾瑜', '知行',
+                 '修远', '明哲', '致远', '承志', '凌云', '瑞霖', '玉泽', '景行', '怀瑾', '握瑜', '含章', '贞元', '颖川', '建安', '元亮']
+
+def random_name():
+    surname = random.choice(SURNAMES)
+    gender_roll = random.random()
+    if gender_roll < 0.45:
+        given = random.choice(GIVEN_MALE)
+        gender = '男'
+    elif gender_roll < 0.9:
+        given = random.choice(GIVEN_FEMALE)
+        gender = '女'
+    else:
+        given = random.choice(GIVEN_NEUTRAL)
+        gender = random.choice(['男', '女'])
+    return surname + given, gender
+
+# Generate students across 5 colleges, 2 majors each, multiple classes
+# Year: 2024, class sizes vary from 8 to 45
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
+
+college_majors = {
+    '01': ['01', '02'],  # 计算机, 软件
+    '02': ['01', '02'],  # 数学, 统计
+    '03': ['01', '02'],  # 电子, 通信
+    '04': ['01', '02'],  # 经济, 管理
+    '05': ['01', '02'],  # 英语, 日语
+}
+
+student_records = []
+for college_code, majors in college_majors.items():
+    for major_code in majors:
+        # Each major gets 1-3 classes with 8-45 students each
+        num_classes = random.randint(1, 3)
+        for class_seq in range(1, num_classes + 1):
+            cls = str(class_seq).zfill(2)
+            num_students = random.randint(8, 45)
+            for seq in range(1, num_students + 1):
+                student_no = f'24{college_code}{major_code}{cls}{str(seq).zfill(2)}'
+                name, gender = random_name()
+                phone = f'138{random.randint(10000000, 99999999)}'
+                student_records.append((student_no, name, gender, '2024', college_code, major_code, phone))
+
+# Shuffle to avoid clustering
+random.shuffle(student_records)
 
 student_ids = []
-for s in students_data:
-    existing = query("SELECT id FROM students WHERE student_no = ?", (s[0],))
-    if not existing:
+for s in student_records:
+    if not query("SELECT id FROM students WHERE student_no = ?", (s[0],)):
         sid = execute(
-            "INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email) VALUES (?,?,?,?,?,?,?,?,?)",
-            s
+            "INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (s[0], s[1], s[2], s[3], s[4], s[5], '', s[6], '')
         )
         student_ids.append(sid)
         # Auto-create student user account
@@ -102,44 +147,46 @@ for s in students_data:
             execute("INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
                     (s[1], generate_password_hash('Ad112233'), 'student'))
     else:
+        existing = query("SELECT id FROM students WHERE student_no = ?", (s[0],))
         student_ids.append(existing[0]['id'])
 print(f"Students seeded: {len(student_ids)}")
 
-# Grades — sample grades referencing courses
-course_rows = query("SELECT id, code FROM courses")
-course_map = {c['code']: c['id'] for c in course_rows}
+# Generate grades — each student gets 3-6 random courses from their college
+course_rows = query("SELECT id, code, college_code FROM courses")
+course_by_college = {}
+for c in course_rows:
+    course_by_college.setdefault(c['college_code'], []).append(c)
 
-grades_data = [
-    (student_ids[0], '0101', 92, '2026', '一'),
-    (student_ids[0], '0104', 88, '2026', '一'),
-    (student_ids[0], '0108', 85, '2026', '一'),
-    (student_ids[1], '0101', 76, '2026', '一'),
-    (student_ids[1], '0104', 82, '2026', '一'),
-    (student_ids[1], '0109', 90, '2026', '一'),
-    (student_ids[2], '0101', 55, '2026', '一'),
-    (student_ids[2], '0110', 68, '2026', '一'),
-    (student_ids[2], '0111', 71, '2026', '一'),
-    (student_ids[3], '0104', 88, '2026', '一'),
-    (student_ids[3], '0105', 79, '2026', '一'),
-    (student_ids[3], '0106', 94, '2026', '一'),
-    (student_ids[4], '0201', 63, '2026', '一'),
-    (student_ids[4], '0202', 72, '2026', '一'),
-    (student_ids[4], '0203', 58, '2026', '一'),
-    (student_ids[5], '0301', 80, '2026', '一'),
-    (student_ids[5], '0302', 75, '2026', '一'),
-    (student_ids[5], '0303', 82, '2026', '一'),
-    (student_ids[6], '0501', 68, '2026', '一'),
-    (student_ids[6], '0502', 91, '2026', '一'),
-]
+grade_count = 0
+student_rows = query("SELECT id, student_no, college_code FROM students")
+semester_years = ['2025', '2026']
+semester_terms = ['一', '二']
 
-if not query("SELECT COUNT(*) as cnt FROM grades")[0]['cnt']:
-    for g in grades_data:
-        cid = course_map.get(g[1])
-        if cid:
-            execute("INSERT INTO grades (student_id, course_id, score, semester_year, semester_term) VALUES (?,?,?,?,?)",
-                    (g[0], cid, g[2], g[3], g[4]))
-print(f"Grades seeded: {len(grades_data)}")
+for student in student_rows:
+    sid = student['id']
+    college = student['student_no'][2:4]  # college_code from student_no
+    available = course_by_college.get(college, [])
+    if not available:
+        continue
+    # Pick 3-6 random courses
+    num_courses = random.randint(3, min(6, len(available)))
+    chosen = random.sample(available, num_courses)
+    for course in chosen:
+        if not query("SELECT id FROM grades WHERE student_id = ? AND course_id = ?",
+                     (sid, course['id'])):
+            score = round(random.gauss(72, 16), 1)
+            score = max(0, min(100, score))  # Clamp 0-100
+            sy = random.choice(semester_years)
+            st = random.choice(semester_terms)
+            execute(
+                "INSERT INTO grades (student_id, course_id, score, semester_year, semester_term) VALUES (?,?,?,?,?)",
+                (sid, course['id'], score, sy, st)
+            )
+            grade_count += 1
+print(f"Grades seeded: {grade_count}")
 
-print("\nDone! Accounts:")
-print("  admin/admin123 | teacher/teacher123 | student1/Ad112233")
-print("  All student accounts password: Ad112233")
+# Print summary
+user_count = query("SELECT COUNT(*) as cnt FROM users")[0]['cnt']
+print(f"\nDone! Total users: {user_count}, Students: {len(student_ids)}, Grades: {grade_count}")
+print("Accounts: admin/admin123 | teacher/teacher123")
+print("All student accounts password: Ad112233")

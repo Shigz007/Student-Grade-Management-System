@@ -81,11 +81,21 @@
 $(function() {
     checkAuth('admin');
 
+    var MAJORS = {
+        '01': {'01':'计算机科学与技术','02':'软件工程'},
+        '02': {'01':'数学与应用数学','02':'统计学'},
+        '03': {'01':'电子信息工程','02':'通信工程'},
+        '04': {'01':'经济学','02':'管理学'},
+        '05': {'01':'英语','02':'日语'}
+    };
+
     api.getStudents().then(function(students) {
         $('#stat-students').text(students.length);
         var classes = {};
         students.forEach(function(s) {
-            var c = s.student_no ? s.student_no.substring(6,8) + '班' : '未分班';
+            var majorName = (MAJORS[s.college_code] && MAJORS[s.college_code][s.major_code]) || '';
+            var cls = s.student_no ? s.student_no.substring(6,8) : '';
+            var c = majorName + cls || '未分班';
             classes[c] = (classes[c] || 0) + 1;
         });
         var html = '';

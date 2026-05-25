@@ -104,7 +104,8 @@ $(function() {
     api.getGrades({}).then(function(grades) {
         var html = '';
         grades.slice(0, 8).forEach(function(g) {
-            html += '<tr><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (g.semester || '-') + '</td></tr>';
+            var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
+            html += '<tr><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (sem || '-') + '</td></tr>';
         });
         $('#recent-grades').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>');
     });

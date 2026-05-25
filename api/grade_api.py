@@ -9,8 +9,9 @@ grade_bp = Blueprint('grade', __name__)
 @login_required
 def get_grades():
     student_id = request.args.get('student_id', '').strip()
-    semester = request.args.get('semester', '').strip()
-    course_name = request.args.get('course_name', '').strip()
+    semester_year = request.args.get('semester_year', '').strip()
+    semester_term = request.args.get('semester_term', '').strip()
+    course_id = request.args.get('course_id', '').strip()
 
     where = []
     args = []
@@ -27,17 +28,22 @@ def get_grades():
         where.append("g.student_id = ?")
         args.append(int(student_id))
 
-    if semester:
-        where.append("g.semester = ?")
-        args.append(semester)
-    if course_name:
-        where.append("g.course_name LIKE ?")
-        args.append(f'%{course_name}%')
+    if semester_year:
+        where.append("g.semester_year = ?")
+        args.append(semester_year)
+    if semester_term:
+        where.append("g.semester_term = ?")
+        args.append(semester_term)
+    if course_id:
+        where.append("g.course_id = ?")
+        args.append(int(course_id))
 
     sql = """
-        SELECT g.*, s.name as student_name, s.student_no
+        SELECT g.*, s.name as student_name, s.student_no,
+               c.name as course_name, c.code as course_code, c.college_name, c.college_code
         FROM grades g
         JOIN students s ON g.student_id = s.id
+        JOIN courses c ON g.course_id = c.id
     """
     if where:
         sql += " WHERE " + " AND ".join(where)
@@ -51,17 +57,18 @@ def get_grades():
 def add_grade():
     data = request.get_json()
     student_id = data.get('student_id')
-    course_name = data.get('course_name', '').strip()
+    course_id = data.get('course_id')
     score = data.get('score')
 
-    if not student_id or not course_name or score is None:
+    if not student_id or not course_id or score is None:
         return jsonify({'error': '学生、课程和成绩不能为空'}), 400
     if not (0 <= float(score) <= 100):
         return jsonify({'error': '成绩必须在0-100之间'}), 400
 
     gid = execute(
-        "INSERT INTO grades (student_id, course_name, score, semester) VALUES (?,?,?,?)",
-        (student_id, course_name, float(score), data.get('semester', ''))
+        "INSERT INTO grades (student_id, course_id, score, semester_year, semester_term) VALUES (?,?,?,?,?)",
+        (int(student_id), int(course_id), float(score),
+         data.get('semester_year', ''), data.get('semester_term', ''))
     )
     return jsonify({'id': gid, 'message': '录入成功'}), 201
 
@@ -79,11 +86,12 @@ def update_grade(gid):
         return jsonify({'error': '成绩必须在0-100之间'}), 400
 
     execute(
-        "UPDATE grades SET student_id=?, course_name=?, score=?, semester=? WHERE id=?",
+        "UPDATE grades SET student_id=?, course_id=?, score=?, semester_year=?, semester_term=? WHERE id=?",
         (data.get('student_id', grade['student_id']),
-         data.get('course_name', grade['course_name']),
+         data.get('course_id', grade['course_id']),
          float(score),
-         data.get('semester', grade['semester']),
+         data.get('semester_year', grade['semester_year']),
+         data.get('semester_term', grade['semester_term']),
          gid)
     )
     return jsonify({'message': '更新成功'})

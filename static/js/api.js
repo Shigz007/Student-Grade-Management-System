@@ -39,6 +39,11 @@ var api = {
     updateGrade: function(id, data) { return this.put('/api/grades/' + id, data); },
     deleteGrade: function(id) { return this.del('/api/grades/' + id); },
 
+    // Courses & Colleges
+    getCourses: function(params) { return this.get('/api/courses', params); },
+    getColleges: function() { return this.get('/api/colleges'); },
+    getNextStudentNo: function(params) { return this.get('/api/students/next-no', params); },
+
     // Stats
     getStats: function(params) { return this.get('/api/grades/stats', params); }
 };

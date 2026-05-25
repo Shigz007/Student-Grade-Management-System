@@ -61,7 +61,7 @@
             <div class="card-header"><h6 class="mb-0">我的成绩</h6></div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead><tr><th>课程</th><th>成绩</th><th>学期</th><th>时间</th></tr></thead>
+                    <thead><tr><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>时间</th></tr></thead>
                     <tbody id="my-grades"></tbody>
                 </table>
             </div>
@@ -83,9 +83,10 @@ $(function() {
     api.getGrades({}).then(function(grades) {
         var html = '';
         grades.forEach(function(g) {
-            html += '<tr><td>' + g.course_name + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (g.semester || '-') + '</td><td>' + (g.created_at || '') + '</td></tr>';
+            var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
+            html += '<tr><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (sem || '-') + '</td><td>' + (g.created_at || '') + '</td></tr>';
         });
-        $('#my-grades').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无成绩</td></tr>');
+        $('#my-grades').html(html || '<tr><td colspan="5" class="text-center text-muted">暂无成绩</td></tr>');
     });
 });
 </script>

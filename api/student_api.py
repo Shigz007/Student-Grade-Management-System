@@ -41,7 +41,7 @@ def get_next_student_no():
     major = request.args.get('major', '01')
     cls = request.args.get('class', '01')
 
-    MAX_PER_CLASS = 50
+    MAX_PER_CLASS = 40
 
     # Auto-roll to next class if the requested one is full
     while True:
@@ -55,7 +55,7 @@ def get_next_student_no():
             break
         cls = str(int(cls) + 1).zfill(2)
         if int(cls) > 99:
-            return jsonify({'error': '该专业所有班级已满（每班50人）'}), 400
+            return jsonify({'error': '该专业所有班级已满（每班40人）'}), 400
 
     existing = query(
         "SELECT student_no FROM students WHERE student_no LIKE ? ORDER BY student_no DESC LIMIT 1",

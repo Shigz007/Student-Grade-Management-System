@@ -49,6 +49,7 @@ var api = {
     updateProfile: function(data) { return this.put('/api/me', data); },
     changePassword: function(data) { return this.put('/api/me/password', data); },
 
-    // Stats
-    getStats: function(params) { return this.get('/api/grades/stats', params); }
+    // Stats & Years
+    getStats: function(params) { return this.get('/api/grades/stats', params); },
+    getYears: function() { return this.get('/api/grades/years'); }
 };

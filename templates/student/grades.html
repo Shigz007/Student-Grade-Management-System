@@ -3,11 +3,19 @@
 <div class="card card-table mb-4">
     <div class="card-header"><h6 class="mb-0">成绩筛选</h6></div>
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-3"><select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select></div>
-            <div class="col-md-3"><select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select></div>
-            <div class="col-md-3"><select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
-            <div class="col-md-3"><button class="btn btn-sm btn-primary" id="btn-filter"><i class="fas fa-search"></i> 查询</button></div>
+        <div class="d-flex align-items-center">
+            <button class="btn btn-sm btn-outline-secondary mr-2" type="button" data-toggle="collapse" data-target="#advanced-filters" id="btn-toggle-filters">
+                <i class="fas fa-sliders-h"></i> 筛选 <i class="fas fa-caret-down"></i>
+            </button>
+            <input type="text" class="form-control form-control-sm mr-2" id="search-input" placeholder="搜索课程、学院、学期..." style="max-width: 300px;">
+        </div>
+        <div class="collapse mt-2" id="advanced-filters">
+            <div class="row">
+                <div class="col-md-3"><select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select></div>
+                <div class="col-md-4"><select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select></div>
+                <div class="col-md-3"><select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select></div>
+                <div class="col-md-2"><select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
+            </div>
         </div>
     </div>
 </div>
@@ -23,36 +31,53 @@
 </div>
 
 <script>
+var collegeNames = {};
+
 $(function() {
     checkAuth('student');
     initFilters();
     loadGrades();
 
-    $('#btn-filter').click(loadGrades);
+    $('#search-input').on('input', loadGrades);
+    $('#filter-year,#filter-term,#filter-course').on('change', loadGrades);
+    $('#advanced-filters').on('show.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-down').removeClass('fa-caret-down').addClass('fa-caret-up'); });
+    $('#advanced-filters').on('hide.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-up').removeClass('fa-caret-up').addClass('fa-caret-down'); });
+
+    $('#filter-college').on('change', function() {
+        populateFilterCourses($(this).val());
+        loadGrades();
+    });
+
+    function populateFilterCourses(collegeCode) {
+        var params = collegeCode ? { college_code: collegeCode } : {};
+        api.getCourses(params).then(function(courses) {
+            var html = '<option value="">全部课程</option>';
+            courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
+            $('#filter-course').html(html);
+        });
+    }
 
     function initFilters() {
-        var yearHtml = '<option value="">全部年份</option>';
-        for (var y = 2020; y <= 2030; y++) { yearHtml += '<option value="' + y + '">' + y + '</option>'; }
-        $('#filter-year').html(yearHtml);
-
-        api.getCourses().then(function(courses) {
-            var html = '<option value="">全部课程</option>';
-            var currentCollege = '';
-            courses.forEach(function(c) {
-                if (c.college_code !== currentCollege) {
-                    if (currentCollege) html += '</optgroup>';
-                    currentCollege = c.college_code;
-                    html += '<optgroup label="' + c.college_code + ' - ' + c.college_name + '">';
-                }
-                html += '<option value="' + c.id + '">' + c.name + '</option>';
+        api.getColleges().then(function(colleges) {
+            var html = '<option value="">全部学院</option>';
+            colleges.forEach(function(c) {
+                html += '<option value="' + c.code + '">' + c.name + '</option>';
+                collegeNames[c.code] = c.name;
             });
-            if (currentCollege) html += '</optgroup>';
-            $('#filter-course').html(html);
+            $('#filter-college').html(html);
+            populateFilterCourses();
+        });
+
+        api.getYears().then(function(years) {
+            var html = '<option value="">全部年份</option>';
+            years.forEach(function(y) { html += '<option value="' + y + '">' + y + '</option>'; });
+            $('#filter-year').html(html);
         });
     }
 
     function loadGrades() {
         var params = {};
+        var search = $('#search-input').val().trim(); if (search) params.search = search;
         var cid = $('#filter-course').val(); if (cid) params.course_id = cid;
         var year = $('#filter-year').val(); if (year) params.semester_year = year;
         var term = $('#filter-term').val(); if (term) params.semester_term = term;

@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, g
+import re
 from auth import login_required, teacher_or_admin
 from db import query, execute
 
@@ -12,6 +13,7 @@ def get_grades():
     semester_year = request.args.get('semester_year', '').strip()
     semester_term = request.args.get('semester_term', '').strip()
     course_id = request.args.get('course_id', '').strip()
+    search = request.args.get('search', '').strip()
 
     where = []
     args = []
@@ -27,6 +29,12 @@ def get_grades():
     elif student_id:
         where.append("g.student_id = ?")
         args.append(int(student_id))
+
+    if search:
+        for part in search.split():
+            for token in re.findall(r'[一-鿿]|[^一-鿿]+', part):
+                where.append("(s.name || s.student_no || c.name || c.college_name || g.semester_year || '第' || g.semester_term || '学期') LIKE ?")
+                args.append('%' + token + '%')
 
     if semester_year:
         where.append("g.semester_year = ?")
@@ -105,6 +113,13 @@ def delete_grade(gid):
         return jsonify({'error': '成绩记录不存在'}), 404
     execute("DELETE FROM grades WHERE id = ?", (gid,))
     return jsonify({'message': '删除成功'})
+
+
+@grade_bp.route('/api/grades/years', methods=['GET'])
+@login_required
+def get_years():
+    rows = query("SELECT DISTINCT semester_year FROM grades WHERE semester_year != '' ORDER BY semester_year")
+    return jsonify([r['semester_year'] for r in rows])
 
 
 @grade_bp.route('/api/grades/stats', methods=['GET'])

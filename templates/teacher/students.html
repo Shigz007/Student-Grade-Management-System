@@ -26,24 +26,24 @@
                     <div class="form-group col-md-6"><label>入学年份</label>
                         <input type="text" class="form-control" id="form-enrollment-year" readonly>
                     </div>
-                    <div class="form-group col-md-6"><label>学院</label>
+                    <div class="form-group col-md-6"><label>学院 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-college"></small></label>
                         <select class="form-control" id="form-college"><option value="">请选择</option></select>
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-6"><label>专业</label>
-                        <select class="form-control" id="form-major"><option value="">请先选择学院</option></select>
+                    <div class="form-group col-md-6"><label>专业 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-major"></small></label>
+                        <select class="form-control" id="form-major" disabled><option value="">请先选择学院</option></select>
                     </div>
-                    <div class="form-group col-md-6"><label>班级序号 <small class="text-muted">（自动分配，01起满50人自动换班）</small></label>
+                    <div class="form-group col-md-6"><label>班级序号 <small class="text-muted">（自动分配）</small></label>
                         <input type="text" class="form-control" id="form-class-seq" readonly>
                     </div>
                 </div>
                 <div class="form-group"><label>学号 <small class="text-muted">（自动生成）</small></label>
                     <input type="text" class="form-control" id="form-student-no" readonly required>
                 </div>
-                <div class="form-group"><label>姓名</label><input type="text" class="form-control" id="form-name" required></div>
-                <div class="form-group"><label>性别</label><select class="form-control" id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
-                <div class="form-group"><label>电话</label><input type="text" class="form-control" id="form-phone"></div>
+                <div class="form-group"><label>姓名 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-name"></small></label><input type="text" class="form-control" id="form-name" required></div>
+                <div class="form-group"><label>性别 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-gender"></small></label><select class="form-control" id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
+                <div class="form-group"><label>电话 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-phone"></small></label><input type="text" class="form-control" id="form-phone" required></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-student">保存</button></div>
         </div>
@@ -70,9 +70,9 @@ $(function() {
         var college = $(this).val();
         var $major = $('#form-major');
         $major.empty();
-        if (!college) { $major.html('<option value="">请先选择学院</option>'); clearStudentNo(); return; }
+        if (!college) { $major.html('<option value="">请先选择学院</option>').prop('disabled', true); clearStudentNo(); return; }
         var list = MAJORS[college] || [];
-        $major.append('<option value="">请选择专业</option>');
+        $major.prop('disabled', false).append('<option value="">请选择专业</option>');
         list.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
         clearStudentNo();
     });
@@ -85,8 +85,9 @@ $(function() {
         $('#form-name,#form-gender,#form-phone').val('');
         $('#form-college').val('');
         $('#form-enrollment-year').val(new Date().getFullYear());
-        $('#form-major').html('<option value="">请先选择学院</option>');
+        $('#form-major').html('<option value="">请先选择学院</option>').prop('disabled', true);
         clearStudentNo();
+        $('.field-error').text('');
         $('#student-modal').modal('show');
     });
 
@@ -103,8 +104,14 @@ $(function() {
             phone: $('#form-phone').val().trim(),
             email: ''
         };
-        if (!data.student_no || !data.name) { alert('学号和姓名不能为空'); return; }
-        if (!data.enrollment_year || !data.college_code || !data.major_code) { alert('请选择入学年份、学院和专业'); return; }
+        $('.field-error').text('');
+        var ok = true;
+        if (!data.name) { $('#err-name').text('请输入姓名'); ok = false; }
+        if (!data.gender) { $('#err-gender').text('请选择性别'); ok = false; }
+        if (!data.college_code) { $('#err-college').text('请选择学院'); ok = false; }
+        if (!data.major_code) { $('#err-major').text('请选择专业'); ok = false; }
+        if (!data.phone) { $('#err-phone').text('请输入电话'); ok = false; }
+        if (!ok) return;
         if (id) {
             api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); });
         } else {

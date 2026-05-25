@@ -81,28 +81,27 @@
 $(function() {
     checkAuth('admin', 'teacher');
 
-    var MAJORS = {
-        '01': {'01':'计算机科学与技术','02':'软件工程'},
-        '02': {'01':'数学与应用数学','02':'统计学'},
-        '03': {'01':'电子信息工程','02':'通信工程'},
-        '04': {'01':'经济学','02':'管理学'},
-        '05': {'01':'英语','02':'日语'}
-    };
+    api.getMajors().then(function(majorsList) {
+        var majorNames = {};
+        majorsList.forEach(function(m) {
+            majorNames[m.college_code + '_' + m.code] = m.name;
+        });
 
-    api.getStudents().then(function(students) {
-        $('#stat-students').text(students.length);
-        var classes = {};
-        students.forEach(function(s) {
-            var majorName = (MAJORS[s.college_code] && MAJORS[s.college_code][s.major_code]) || '';
-            var cls = s.student_no ? s.student_no.substring(6,8) : '';
-            var c = majorName + cls || '未分班';
-            classes[c] = (classes[c] || 0) + 1;
+        api.getStudents().then(function(students) {
+            $('#stat-students').text(students.length);
+            var classes = {};
+            students.forEach(function(s) {
+                var majorName = majorNames[s.college_code + '_' + s.major_code] || '';
+                var cls = s.student_no ? s.student_no.substring(6,8) : '';
+                var c = majorName + cls || '未分班';
+                classes[c] = (classes[c] || 0) + 1;
+            });
+            var html = '';
+            Object.keys(classes).forEach(function(c) {
+                html += '<div class="d-flex justify-content-between align-items-center mb-2"><span>' + c + '</span><span class="badge badge-primary">' + classes[c] + ' 人</span></div>';
+            });
+            $('#class-distribution').html(html || '<p class="text-muted text-center">暂无数据</p>');
         });
-        var html = '';
-        Object.keys(classes).forEach(function(c) {
-            html += '<div class="d-flex justify-content-between align-items-center mb-2"><span>' + c + '</span><span class="badge badge-primary">' + classes[c] + ' 人</span></div>';
-        });
-        $('#class-distribution').html(html || '<p class="text-muted text-center">暂无数据</p>');
     });
 
     api.getStats().then(function(stats) {

@@ -42,6 +42,7 @@ var api = {
     // Courses & Colleges
     getCourses: function(params) { return this.get('/api/courses', params); },
     getColleges: function() { return this.get('/api/colleges'); },
+    getMajors: function(params) { return this.get('/api/majors', params); },
     getNextStudentNo: function(params) { return this.get('/api/students/next-no', params); },
     getClasses: function(params) { return this.get('/api/students/classes', params); },
 

@@ -51,14 +51,6 @@
 </div>
 
 <script>
-var MAJORS = {
-    '01': [{code: '01', name: '计算机科学与技术'}, {code: '02', name: '软件工程'}],
-    '02': [{code: '01', name: '数学与应用数学'}, {code: '02', name: '统计学'}],
-    '03': [{code: '01', name: '电子信息工程'}, {code: '02', name: '通信工程'}],
-    '04': [{code: '01', name: '经济学'}, {code: '02', name: '管理学'}],
-    '05': [{code: '01', name: '英语'}, {code: '02', name: '日语'}]
-};
-
 $(function() {
     checkAuth('admin', 'teacher');
     initForm();
@@ -71,9 +63,10 @@ $(function() {
         var $major = $('#form-major');
         $major.empty();
         if (!college) { $major.html('<option value="">请先选择学院</option>').prop('disabled', true); clearStudentNo(); return; }
-        var list = MAJORS[college] || [];
-        $major.prop('disabled', false).append('<option value="">请选择专业</option>');
-        list.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
+        api.getMajors({college_code: college}).then(function(majors) {
+            $major.prop('disabled', false).append('<option value="">请选择专业</option>');
+            majors.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
+        });
         clearStudentNo();
     });
 
@@ -128,9 +121,14 @@ $(function() {
                 $('#student-modal-title').text('编辑学生');
                 $('#form-enrollment-year').val(s.enrollment_year || '');
                 $('#form-college').val(s.college_code || '').trigger('change');
-                setTimeout(function() {
-                    $('#form-major').val(s.major_code || '');
-                }, 200);
+                var targetMajor = s.major_code || '';
+                var check = setInterval(function() {
+                    if ($('#form-major option').length > 1) {
+                        clearInterval(check);
+                        $('#form-major').val(targetMajor);
+                    }
+                }, 50);
+                setTimeout(function() { clearInterval(check); }, 5000);
                 $('#form-student-no').val(s.student_no);
                 $('#form-class-seq').val(s.student_no.substring(6, 8));
                 $('#form-name').val(s.name);

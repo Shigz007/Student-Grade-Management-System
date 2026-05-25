@@ -33,7 +33,7 @@ def get_grades():
     if search:
         for part in search.split():
             for token in re.findall(r'[一-鿿]|[^一-鿿]+', part):
-                where.append("(s.name || s.student_no || c.name || c.college_name || g.semester_year || '第' || g.semester_term || '学期') LIKE ?")
+                where.append("(s.name || s.student_no || c.name || cl.name || g.semester_year || '第' || g.semester_term || '学期') LIKE ?")
                 args.append('%' + token + '%')
 
     if semester_year:
@@ -48,10 +48,12 @@ def get_grades():
 
     sql = """
         SELECT g.*, s.name as student_name, s.student_no,
-               c.name as course_name, c.code as course_code, c.college_name, c.college_code
+               c.name as course_name, c.code as course_code,
+               cl.name as college_name, c.college_code
         FROM grades g
         JOIN students s ON g.student_id = s.id
         JOIN courses c ON g.course_id = c.id
+        JOIN colleges cl ON c.college_code = cl.code
     """
     if where:
         sql += " WHERE " + " AND ".join(where)

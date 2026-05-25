@@ -1,17 +1,30 @@
 import sqlite3
-from config import DATABASE
+from config import DATABASE, SCHOOL_DATABASE
 
 
 def get_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute(f"ATTACH DATABASE '{SCHOOL_DATABASE}' AS school")
     return conn
 
 
 def init_db():
-    conn = get_db()
+    # Main database
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     with open('schema.sql') as f:
+        conn.executescript(f.read())
+    conn.commit()
+    conn.close()
+
+    # School database — separate connection so tables go into school.db
+    conn = sqlite3.connect(SCHOOL_DATABASE)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    with open('school_schema.sql') as f:
         conn.executescript(f.read())
     conn.commit()
     conn.close()

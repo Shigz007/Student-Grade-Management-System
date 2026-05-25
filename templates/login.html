@@ -48,8 +48,9 @@
     <script src="/static/js/api.js"></script>
     <script>
         $(function() {
-            if (localStorage.getItem('token')) {
-                window.location.href = '/';
+            var user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (localStorage.getItem('token') && user.role) {
+                window.location.href = '/' + user.role;
             }
             $('#login-form').on('submit', function(e) {
                 e.preventDefault();
@@ -63,7 +64,7 @@
                     success: function(res) {
                         localStorage.setItem('token', res.token);
                         localStorage.setItem('user', JSON.stringify(res.user));
-                        window.location.href = '/';
+                        window.location.href = '/' + res.user.role;
                     },
                     error: function(xhr) {
                         var msg = xhr.responseJSON ? xhr.responseJSON.error : '登录失败';

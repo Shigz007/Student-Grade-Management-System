@@ -1,0 +1,48 @@
+{% extends "student/base.html" %}
+{% block content %}
+<div class="card card-table mb-4">
+    <div class="card-header"><h6 class="mb-0">成绩筛选</h6></div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4"><input type="text" class="form-control form-control-sm" id="filter-course" placeholder="课程名称..."></div>
+            <div class="col-md-4"><input type="text" class="form-control form-control-sm" id="filter-semester" placeholder="学期（如 2026春）..."></div>
+            <div class="col-md-4"><button class="btn btn-sm btn-primary" id="btn-filter"><i class="fas fa-search"></i> 查询</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-table">
+    <div class="card-header"><h6 class="mb-0">我的成绩</h6></div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>课程</th><th>成绩</th><th>学期</th><th>时间</th></tr></thead>
+            <tbody id="grade-table"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+$(function() {
+    checkAuth('student');
+    loadGrades();
+
+    $('#btn-filter').click(loadGrades);
+
+    function loadGrades() {
+        var params = {};
+        var course = $('#filter-course').val().trim();
+        if (course) params.course_name = course;
+        var sem = $('#filter-semester').val().trim();
+        if (sem) params.semester = sem;
+
+        api.getGrades(params).then(function(grades) {
+            var html = '';
+            grades.forEach(function(g) {
+                html += '<tr><td>' + g.course_name + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (g.semester || '-') + '</td><td>' + (g.created_at || '') + '</td></tr>';
+            });
+            $('#grade-table').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无成绩</td></tr>');
+        });
+    }
+});
+</script>
+{% endblock %}

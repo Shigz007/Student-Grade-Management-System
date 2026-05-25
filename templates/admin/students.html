@@ -1,0 +1,95 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="card card-table">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">学生列表</h6>
+        <div class="d-flex align-items-center">
+            <input type="text" class="form-control form-control-sm mr-2" id="search-input" placeholder="搜索学号/姓名..." style="width: 200px;">
+            <button class="btn btn-sm btn-primary" id="btn-add-student"><i class="fas fa-plus"></i> 新增学生</button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>电话</th><th>邮箱</th><th>操作</th></tr></thead>
+            <tbody id="student-table"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="student-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="student-modal-title">新增学生</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-student-id">
+                <div class="form-group"><label>学号</label><input type="text" class="form-control" id="form-student-no" required></div>
+                <div class="form-group"><label>姓名</label><input type="text" class="form-control" id="form-name" required></div>
+                <div class="form-group"><label>性别</label><select class="form-control" id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
+                <div class="form-group"><label>班级</label><input type="text" class="form-control" id="form-class"></div>
+                <div class="form-group"><label>电话</label><input type="text" class="form-control" id="form-phone"></div>
+                <div class="form-group"><label>邮箱</label><input type="text" class="form-control" id="form-email"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-student">保存</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    checkAuth('admin');
+    loadStudents();
+
+    $('#search-input').on('input', loadStudents);
+
+    $('#btn-add-student').click(function() {
+        $('#edit-student-id').val('');
+        $('#student-modal-title').text('新增学生');
+        $('#form-student-no,#form-name,#form-gender,#form-class,#form-phone,#form-email').val('');
+        $('#student-modal').modal('show');
+    });
+
+    $('#btn-save-student').click(function() {
+        var id = $('#edit-student-id').val();
+        var data = { student_no: $('#form-student-no').val().trim(), name: $('#form-name').val().trim(), gender: $('#form-gender').val(), class_name: $('#form-class').val().trim(), phone: $('#form-phone').val().trim(), email: $('#form-email').val().trim() };
+        if (!data.student_no || !data.name) { alert('学号和姓名不能为空'); return; }
+        if (id) {
+            api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); });
+        } else {
+            api.addStudent(data).then(function() { $('#student-modal').modal('hide'); loadStudents(); });
+        }
+    });
+
+    $(document).on('click', '.btn-edit', function() {
+        var id = $(this).data('id');
+        api.getStudents({}).then(function(students) {
+            var s = students.find(function(st) { return st.id === id; });
+            if (s) {
+                $('#edit-student-id').val(s.id);
+                $('#student-modal-title').text('编辑学生');
+                $('#form-student-no').val(s.student_no); $('#form-name').val(s.name);
+                $('#form-gender').val(s.gender); $('#form-class').val(s.class_name);
+                $('#form-phone').val(s.phone); $('#form-email').val(s.email);
+                $('#student-modal').modal('show');
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-delete', function() {
+        if (!confirm('确定删除该学生及其所有成绩？')) return;
+        api.deleteStudent($(this).data('id')).then(function() { loadStudents(); });
+    });
+
+    function loadStudents() {
+        var search = $('#search-input').val().trim();
+        api.getStudents(search ? { search: search } : {}).then(function(students) {
+            var html = '';
+            students.forEach(function(s) {
+                html += '<tr><td>' + s.student_no + '</td><td>' + s.name + '</td><td>' + (s.gender || '-') + '</td><td>' + (s.class_name || '-') + '</td><td>' + (s.phone || '-') + '</td><td>' + (s.email || '-') + '</td>';
+                html += '<td><button class="btn btn-sm btn-info btn-action mr-1 btn-edit" data-id="' + s.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete" data-id="' + s.id + '"><i class="fas fa-trash"></i></button></td></tr>';
+            });
+            $('#student-table').html(html || '<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>');
+        });
+    }
+});
+</script>
+{% endblock %}

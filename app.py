@@ -16,24 +16,59 @@ def assets(filename):
     return send_from_directory('boomerang-free-bootstrap-ui-kit-master/assets', filename)
 
 
-@app.route('/')
-def index():
-    return render_template('dashboard.html')
-
-
+# === Login ===
 @app.route('/login')
 def login_page():
     return render_template('login.html')
 
 
-@app.route('/students')
-def students_page():
-    return render_template('students.html')
+# === Admin ===
+@app.route('/admin')
+def admin_dashboard():
+    return render_template('admin/dashboard.html')
 
 
-@app.route('/grades')
-def grades_page():
-    return render_template('grades.html')
+@app.route('/admin/students')
+def admin_students():
+    return render_template('admin/students.html')
+
+
+@app.route('/admin/grades')
+def admin_grades():
+    return render_template('admin/grades.html')
+
+
+# === Teacher ===
+@app.route('/teacher')
+def teacher_dashboard():
+    return render_template('teacher/dashboard.html')
+
+
+@app.route('/teacher/students')
+def teacher_students():
+    return render_template('teacher/students.html')
+
+
+@app.route('/teacher/grades')
+def teacher_grades():
+    return render_template('teacher/grades.html')
+
+
+# === Student ===
+@app.route('/student')
+def student_dashboard():
+    return render_template('student/dashboard.html')
+
+
+@app.route('/student/grades')
+def student_grades():
+    return render_template('student/grades.html')
+
+
+# === Root redirect ===
+@app.route('/')
+def index():
+    return render_template('login.html')
 
 
 if __name__ == '__main__':

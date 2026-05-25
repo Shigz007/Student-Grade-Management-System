@@ -1,0 +1,92 @@
+{% extends "student/base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="stat-avg">0</div>
+                        <div class="stat-label">我的平均分</div>
+                    </div>
+                    <div style="font-size:2rem;opacity:0.5;"><i class="fas fa-chart-bar"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="stat-max">0</div>
+                        <div class="stat-label">我的最高分</div>
+                    </div>
+                    <div style="font-size:2rem;opacity:0.5;"><i class="fas fa-arrow-up"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="stat-pass">0%</div>
+                        <div class="stat-label">我的及格率</div>
+                    </div>
+                    <div style="font-size:2rem;opacity:0.5;"><i class="fas fa-check-circle"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="stat-count">0</div>
+                        <div class="stat-label">我的成绩数</div>
+                    </div>
+                    <div style="font-size:2rem;opacity:0.5;"><i class="fas fa-clipboard-list"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-table">
+            <div class="card-header"><h6 class="mb-0">我的成绩</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>课程</th><th>成绩</th><th>学期</th><th>时间</th></tr></thead>
+                    <tbody id="my-grades"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    checkAuth('student');
+
+    api.getStats().then(function(stats) {
+        $('#stat-avg').text(stats.avg);
+        $('#stat-max').text(stats.max);
+        $('#stat-pass').text(stats.pass_rate + '%');
+        $('#stat-count').text(stats.count);
+    });
+
+    api.getGrades({}).then(function(grades) {
+        var html = '';
+        grades.forEach(function(g) {
+            html += '<tr><td>' + g.course_name + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (g.semester || '-') + '</td><td>' + (g.created_at || '') + '</td></tr>';
+        });
+        $('#my-grades').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无成绩</td></tr>');
+    });
+});
+</script>
+{% endblock %}

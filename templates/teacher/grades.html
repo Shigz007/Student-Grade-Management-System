@@ -1,28 +1,31 @@
 {% extends "teacher/base.html" %}
 {% block content %}
-<div class="card card-table mb-4">
-    <div class="card-header"><h6 class="mb-0">成绩筛选</h6></div>
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">成绩筛选</h6></div>
     <div class="card-body">
-        <div class="d-flex align-items-center">
-            <button class="btn btn-sm btn-outline-secondary mr-2" type="button" data-toggle="collapse" data-target="#advanced-filters" id="btn-toggle-filters">
+        <div class="d-flex align-items-center flex-wrap">
+            <button class="btn btn-sm btn-outline-secondary mr-2 mb-2" type="button" data-toggle="collapse" data-target="#advanced-filters" id="btn-toggle-filters">
                 <i class="fas fa-sliders-h"></i> 筛选 <i class="fas fa-caret-down"></i>
             </button>
-            <input type="text" class="form-control form-control-sm mr-2" id="search-input" placeholder="搜索学生、课程、学院、学期..." style="max-width: 300px;">
-            <button class="btn btn-sm btn-success" id="btn-add-grade"><i class="fas fa-plus"></i> 录入成绩</button>
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 300px;">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索学生、课程、学院、学期...">
+            </div>
+            <button class="btn btn-sm btn-success mb-2" id="btn-add-grade"><i class="fas fa-plus"></i> 录入成绩</button>
         </div>
-        <div class="collapse mt-2" id="advanced-filters">
+        <div class="collapse mt-3" id="advanced-filters">
             <div class="row">
-                <div class="col-md-2"><select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select></div>
-                <div class="col-md-3"><select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select></div>
-                <div class="col-md-2"><select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select></div>
-                <div class="col-md-2"><select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
+                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select></div>
+                <div class="col-md-3 mb-2"><select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select></div>
+                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select></div>
+                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card card-table">
-    <div class="card-header"><h6 class="mb-0">成绩列表</h6></div>
+<div class="card z-depth-1">
+    <div class="card-header"><h6 class="heading h6 mb-0">成绩列表</h6></div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
             <thead><tr><th>学号</th><th>学生</th><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>时间</th><th>操作</th></tr></thead>
@@ -37,15 +40,21 @@
             <div class="modal-header"><h5 class="modal-title" id="grade-modal-title">录入成绩</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
             <div class="modal-body">
                 <input type="hidden" id="edit-grade-id">
-                <div class="form-group"><label>学生 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-student"></small></label><input type="text" class="form-control form-control-sm mb-2" id="form-student-search" placeholder="输入姓名或学号搜索学生..."><select class="form-control" id="form-grade-student" size="6" required></select></div>
-                <div class="form-row">
-                    <div class="form-group col-md-6"><label>学院</label><input type="text" class="form-control" id="form-grade-college" readonly placeholder="自动填充"></div>
-                    <div class="form-group col-md-6"><label>课程 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-course"></small></label><select class="form-control" id="form-grade-course" disabled required><option value="">请选择课程</option></select></div>
+                <div class="form-group"><label class="form-control-label">学生 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-student"></small></label>
+                    <div class="input-group input-group-transparent mb-2">
+                        <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                        <input type="text" class="form-control form-control-sm" id="form-student-search" placeholder="输入姓名或学号搜索学生...">
+                    </div>
+                    <select class="form-control" id="form-grade-student" size="6" required></select>
                 </div>
-                <div class="form-group"><label>成绩 (0-100) <span class="text-danger">*</span> <small class="text-danger field-error" id="err-score"></small></label><input type="number" class="form-control" id="form-score" min="0" max="100" step="0.5" required oninput="if(this.value>100)this.value=100;if(this.value<0)this.value=0"></div>
                 <div class="form-row">
-                    <div class="form-group col-md-6"><label>学年 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-year"></small></label><select class="form-control" id="form-year" required></select></div>
-                    <div class="form-group col-md-6"><label>学期 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-term"></small></label><select class="form-control" id="form-term" required><option value="">请选择</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
+                    <div class="form-group col-md-6"><label class="form-control-label">学院</label><input type="text" class="form-control" id="form-grade-college" readonly placeholder="自动填充"></div>
+                    <div class="form-group col-md-6"><label class="form-control-label">课程 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-course"></small></label><select class="form-control" id="form-grade-course" disabled required><option value="">请选择课程</option></select></div>
+                </div>
+                <div class="form-group"><label class="form-control-label">成绩 (0-100) <span class="text-danger">*</span> <small class="text-danger field-error" id="err-score"></small></label><input type="number" class="form-control" id="form-score" min="0" max="100" step="0.5" required oninput="if(this.value>100)this.value=100;if(this.value<0)this.value=0"></div>
+                <div class="form-row">
+                    <div class="form-group col-md-6"><label class="form-control-label">学年 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-year"></small></label><select class="form-control" id="form-year" required></select></div>
+                    <div class="form-group col-md-6"><label class="form-control-label">学期 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-term"></small></label><select class="form-control" id="form-term" required><option value="">请选择</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
                 </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-grade">保存</button></div>
@@ -55,7 +64,7 @@
 
 <script>
 $(function() {
-    checkAuth('admin', 'teacher');
+    checkAuth();
     initFilters();
     initCollegeEvents();
     loadStudentsDropdown();
@@ -67,17 +76,13 @@ $(function() {
     $('#advanced-filters').on('hide.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-up').removeClass('fa-caret-up').addClass('fa-caret-down'); });
 
     $('#btn-add-grade').click(function() {
-        $('#edit-grade-id').val('');
-        $('#grade-modal-title').text('录入成绩');
-        $('#form-score').val('');
-        $('#form-term').val('');
-        confirmedStudentId = null;
-        confirmedStudentText = '';
+        $('#edit-grade-id').val(''); $('#grade-modal-title').text('录入成绩');
+        $('#form-score').val(''); $('#form-term').val('');
+        confirmedStudentId = null; confirmedStudentText = '';
         $('#form-grade-college').val('');
         $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
         $('#form-student-search').val('').trigger('input');
-        $('#form-grade-student').val('');
-        $('#form-year').val('');
+        $('#form-grade-student').val(''); $('#form-year').val('');
         $('.field-error').text('');
         $('#grade-modal').modal('show');
     });
@@ -100,11 +105,8 @@ $(function() {
         if (!data.semester_year) { $('#err-year').text('请选择学年'); ok = false; }
         if (!data.semester_term) { $('#err-term').text('请选择学期'); ok = false; }
         if (!ok) return;
-        if (id) {
-            api.updateGrade(id, data).then(function() { $('#grade-modal').modal('hide'); loadGrades(); });
-        } else {
-            api.addGrade(data).then(function() { $('#grade-modal').modal('hide'); loadGrades(); });
-        }
+        if (id) { api.updateGrade(id, data).then(function() { $('#grade-modal').modal('hide'); loadGrades(); }); }
+        else { api.addGrade(data).then(function() { $('#grade-modal').modal('hide'); loadGrades(); }); }
     });
 
     $(document).on('click', '.btn-edit-grade', function() {
@@ -112,14 +114,12 @@ $(function() {
         api.getGrades({}).then(function(grades) {
             var g = grades.find(function(gr) { return gr.id === id; });
             if (g) {
-                $('#edit-grade-id').val(g.id);
-                $('#grade-modal-title').text('编辑成绩');
+                $('#edit-grade-id').val(g.id); $('#grade-modal-title').text('编辑成绩');
                 $('#form-grade-student').val(g.student_id);
                 $('#form-student-search').val(g.student_no + ' ' + g.student_name);
                 $('#form-grade-college').val(collegeNames[g.college_code] || g.college_code || '');
                 $('#form-score').val(g.score);
-                $('#form-year').val(g.semester_year || '');
-                $('#form-term').val(g.semester_term || '');
+                $('#form-year').val(g.semester_year || ''); $('#form-term').val(g.semester_term || '');
                 populateFormCourses(g.college_code || '', g.course_id);
                 var editStudent = allStudents.find(function(s) { return s.id == g.student_id; });
                 if (editStudent) populateFormYears(editStudent.enrollment_year);
@@ -144,10 +144,7 @@ $(function() {
     }
 
     function populateFormCourses(collegeCode, selectedCourseId) {
-        if (!collegeCode) {
-            $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
-            return;
-        }
+        if (!collegeCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
         api.getCourses({ college_code: collegeCode }).then(function(courses) {
             var html = '<option value="">请选择课程</option>';
             courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
@@ -160,46 +157,30 @@ $(function() {
         var currentYear = new Date().getFullYear();
         var startYear = parseInt(enrollmentYear) || currentYear;
         var html = '<option value="">请选择</option>';
-        for (var y = startYear; y <= currentYear; y++) {
-            html += '<option value="' + y + '">' + y + '</option>';
-        }
+        for (var y = startYear; y <= currentYear; y++) { html += '<option value="' + y + '">' + y + '</option>'; }
         $('#form-year').html(html);
     }
 
     function initCollegeEvents() {
-        $('#filter-college').on('change', function() {
-            populateFilterCourses($(this).val());
-            loadGrades();
-        });
+        $('#filter-college').on('change', function() { populateFilterCourses($(this).val()); loadGrades(); });
     }
 
     function initFilters() {
         api.getColleges().then(function(colleges) {
             var filterHtml = '<option value="">全部学院</option>';
-            colleges.forEach(function(c) {
-                filterHtml += '<option value="' + c.code + '">' + c.name + '</option>';
-                collegeNames[c.code] = c.name;
-            });
+            colleges.forEach(function(c) { filterHtml += '<option value="' + c.code + '">' + c.name + '</option>'; collegeNames[c.code] = c.name; });
             $('#filter-college').html(filterHtml);
             populateFilterCourses();
         });
-
         api.getYears().then(function(years) {
             var filterHtml = '<option value="">全部年份</option>';
             var formHtml = '<option value="">请选择</option>';
-            years.forEach(function(y) {
-                filterHtml += '<option value="' + y + '">' + y + '</option>';
-                formHtml += '<option value="' + y + '">' + y + '</option>';
-            });
-            $('#filter-year').html(filterHtml);
-            $('#form-year').html(formHtml);
+            years.forEach(function(y) { filterHtml += '<option value="' + y + '">' + y + '</option>'; formHtml += '<option value="' + y + '">' + y + '</option>'; });
+            $('#filter-year').html(filterHtml); $('#form-year').html(formHtml);
         });
     }
 
-    var allStudents = [];
-    var collegeNames = {};
-    var confirmedStudentId = null;
-    var confirmedStudentText = '';
+    var allStudents = []; var collegeNames = {}; var confirmedStudentId = null; var confirmedStudentText = '';
 
     function loadStudentsDropdown() {
         api.getStudents({}).then(function(students) {
@@ -216,11 +197,9 @@ $(function() {
             $('#form-student-search').val(selected.text()).trigger('input');
             var student = allStudents.find(function(s) { return s.id == selected.val(); });
             if (student && student.college_code) {
-                confirmedStudentId = student.id;
-                confirmedStudentText = selected.text();
+                confirmedStudentId = student.id; confirmedStudentText = selected.text();
                 $('#form-grade-college').val(collegeNames[student.college_code] || student.college_code);
-                populateFormCourses(student.college_code);
-                populateFormYears(student.enrollment_year);
+                populateFormCourses(student.college_code); populateFormYears(student.enrollment_year);
             }
         }
     });
@@ -234,16 +213,11 @@ $(function() {
             $('#form-grade-student').html(html);
             return;
         }
-        if (confirmedStudentId && q !== confirmedStudentText) {
-            resetCollegeOnly();
-        }
+        if (confirmedStudentId && q !== confirmedStudentText) { resetCollegeOnly(); }
         var ql = q.toLowerCase();
         var filtered = allStudents.filter(function(s) {
             var target = (s.student_no + ' - ' + s.name).toLowerCase();
-            var j = 0;
-            for (var i = 0; i < target.length && j < ql.length; i++) {
-                if (target[i] === ql[j]) j++;
-            }
+            var j = 0; for (var i = 0; i < target.length && j < ql.length; i++) { if (target[i] === ql[j]) j++; }
             return j === ql.length;
         });
         var html = '<option value="" disabled>双击选择学生</option>';
@@ -252,18 +226,14 @@ $(function() {
     });
 
     function resetFormFields() {
-        confirmedStudentId = null;
-        confirmedStudentText = '';
-        $('#form-grade-college').val('');
-        $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
+        confirmedStudentId = null; confirmedStudentText = '';
+        $('#form-grade-college').val(''); $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
         $('#form-year').val('');
     }
 
     function resetCollegeOnly() {
-        confirmedStudentId = null;
-        confirmedStudentText = '';
-        $('#form-grade-college').val('');
-        $('#form-grade-student').val('');
+        confirmedStudentId = null; confirmedStudentText = '';
+        $('#form-grade-college').val(''); $('#form-grade-student').val('');
         $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
     }
 
@@ -277,9 +247,10 @@ $(function() {
             var html = '';
             grades.forEach(function(g) {
                 var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
+                var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
                 html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td>';
-                html += '<td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td>';
-                html += '<td>' + (sem || '-') + '</td><td>' + (g.created_at || '') + '</td>';
+                html += '<td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td>';
+                html += '<td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td>';
                 html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash"></i></button></td></tr>';
             });
             $('#grade-table').html(html || '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');

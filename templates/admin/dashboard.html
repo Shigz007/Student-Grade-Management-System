@@ -2,7 +2,7 @@
 {% block content %}
 <div class="row">
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card bg-primary text-white">
+        <div class="card stat-card bg-primary text-white z-depth-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card bg-success text-white">
+        <div class="card stat-card bg-success text-white z-depth-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -28,7 +28,7 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card bg-info text-white">
+        <div class="card stat-card bg-info text-white z-depth-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -41,7 +41,7 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card bg-warning text-white">
+        <div class="card stat-card bg-warning text-white z-depth-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -57,8 +57,8 @@
 
 <div class="row">
     <div class="col-lg-6 mb-4">
-        <div class="card card-table">
-            <div class="card-header"><h6 class="mb-0">最近录入的成绩</h6></div>
+        <div class="card z-depth-1">
+            <div class="card-header"><h6 class="heading h6 mb-0">最近录入的成绩</h6></div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
                     <thead><tr><th>学生</th><th>课程</th><th>成绩</th><th>学期</th></tr></thead>
@@ -68,8 +68,8 @@
         </div>
     </div>
     <div class="col-lg-6 mb-4">
-        <div class="card card-table">
-            <div class="card-header"><h6 class="mb-0">班级分布</h6></div>
+        <div class="card z-depth-1">
+            <div class="card-header"><h6 class="heading h6 mb-0">班级分布</h6></div>
             <div class="card-body">
                 <div id="class-distribution"></div>
             </div>
@@ -79,7 +79,7 @@
 
 <script>
 $(function() {
-    checkAuth('admin');
+    checkAuth();
 
     api.getMajors().then(function(majorsList) {
         var majorNames = {};
@@ -97,8 +97,8 @@ $(function() {
                 classes[c] = (classes[c] || 0) + 1;
             });
             var html = '';
-            Object.keys(classes).forEach(function(c) {
-                html += '<div class="d-flex justify-content-between align-items-center mb-2"><span>' + c + '</span><span class="badge badge-primary">' + classes[c] + ' 人</span></div>';
+            Object.keys(classes).sort().forEach(function(c) {
+                html += '<div class="d-flex justify-content-between align-items-center mb-2"><span class="text-sm">' + c + '</span><span class="badge badge-primary">' + classes[c] + ' 人</span></div>';
             });
             $('#class-distribution').html(html || '<p class="text-muted text-center">暂无数据</p>');
         });
@@ -114,7 +114,8 @@ $(function() {
         var html = '';
         grades.slice(0, 8).forEach(function(g) {
             var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
-            html += '<tr><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td><td>' + (sem || '-') + '</td></tr>';
+            var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
+            html += '<tr><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td><small>' + (sem || '-') + '</small></td></tr>';
         });
         $('#recent-grades').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>');
     });

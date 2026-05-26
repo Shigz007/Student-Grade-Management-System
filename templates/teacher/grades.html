@@ -280,7 +280,7 @@ $(function() {
                 html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td>';
                 html += '<td><span class="badge badge-' + (g.score >= 90 ? 'success' : g.score >= 60 ? 'primary' : 'danger') + '">' + g.score + '</span></td>';
                 html += '<td>' + (sem || '-') + '</td><td>' + (g.created_at || '') + '</td>';
-                html += '<td><button class="btn btn-sm btn-info btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash"></i></button></td></tr>';
+                html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash"></i></button></td></tr>';
             });
             $('#grade-table').html(html || '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
         });

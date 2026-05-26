@@ -172,7 +172,7 @@ $(function() {
             var html = '';
             students.forEach(function(s) {
                 html += '<tr><td>' + s.student_no + '</td><td>' + s.name + '</td><td>' + (s.gender || '-') + '</td><td>' + (s.student_no ? s.student_no.substring(6,8) : '-') + '</td><td>' + (s.phone || '-') + '</td>';
-                html += '<td><button class="btn btn-sm btn-info btn-action btn-edit" data-id="' + s.id + '"><i class="fas fa-edit"></i></button></td></tr>';
+                html += '<td><button class="btn btn-sm btn-success btn-action btn-edit" data-id="' + s.id + '"><i class="fas fa-edit"></i></button></td></tr>';
             });
             $('#student-table').html(html || '<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>');
         });

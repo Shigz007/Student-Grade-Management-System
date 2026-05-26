@@ -220,13 +220,19 @@ $(function() {
         $('#filter-college').on('change', function() {
             var collegeCode = $(this).val();
             var $major = $('#filter-major');
-            var savedMajorText = $major.find('option:selected').text();
+            var $majorOpt = $major.find('option:selected');
+            var savedMajorText = $majorOpt.text();
             var savedMajorVal = $major.val() || '';
+            var savedMajorCollege = $majorOpt.data('college') || '';
             var savedCourse = $('#filter-course').val() || '';
-            populateFilterMajors(collegeCode, savedMajorText, function() {
+            populateFilterMajors(collegeCode, savedMajorText, savedMajorCollege, function() {
                 var actualMajor = $('#filter-major').val() || '';
+                var actualCollege = collegeCode;
+                if (!actualCollege && actualMajor) {
+                    actualCollege = $('#filter-major').find('option:selected').data('college') || '';
+                }
                 var keepCourse = savedMajorVal && actualMajor ? savedCourse : '';
-                populateFilterCourses(collegeCode, actualMajor, keepCourse);
+                populateFilterCourses(actualCollege, actualMajor, keepCourse);
                 loadGrades();
             });
         });
@@ -234,23 +240,32 @@ $(function() {
             var collegeCode = $('#filter-college').val();
             var majorCode = $(this).val();
             var savedCourse = $('#filter-course').val() || '';
+            if (!collegeCode && majorCode) {
+                collegeCode = $(this).find('option:selected').data('college') || '';
+            }
             populateFilterCourses(collegeCode, majorCode, savedCourse);
             loadGrades();
         });
     }
 
-    function populateFilterMajors(collegeCode, savedText, callback) {
+    function populateFilterMajors(collegeCode, savedText, savedCollege, callback) {
         var $major = $('#filter-major');
         var params = collegeCode ? { college_code: collegeCode } : {};
         api.getMajors(params).then(function(majors) {
             var html = '<option value="">全部专业</option>';
-            var matchCode = '';
+            var matchCode = '', matchCollege = '';
             majors.forEach(function(m) {
-                html += '<option value="' + m.code + '">' + m.name + '</option>';
-                if (savedText && m.name === savedText) matchCode = m.code;
+                html += '<option value="' + m.code + '" data-college="' + m.college_code + '">' + m.name + '</option>';
+                if (savedText && m.name === savedText && (!savedCollege || m.college_code === savedCollege)) {
+                    matchCode = m.code; matchCollege = m.college_code;
+                }
             });
             $major.html(html);
-            $major.val(matchCode || '');
+            if (matchCode) {
+                $major.find('option[value="' + matchCode + '"][data-college="' + matchCollege + '"]').prop('selected', true);
+            } else {
+                $major.val('');
+            }
             if (callback) callback();
         });
     }
@@ -339,8 +354,11 @@ $(function() {
     function loadGrades() {
         var params = {};
         var search = $('#search-input').val().trim(); if (search) params.search = search;
-        var college = $('#filter-college').val(); if (college) params.college_code = college;
-        var major = $('#filter-major').val(); if (major) params.major_code = major;
+        var college = $('#filter-college').val();
+        var major = $('#filter-major').val();
+        if (!college && major) { college = $('#filter-major').find('option:selected').data('college') || ''; }
+        if (college) params.college_code = college;
+        if (major) params.major_code = major;
         var cid = $('#filter-course').val(); if (cid) params.course_id = cid;
         var year = $('#filter-year').val(); if (year) params.semester_year = year;
         var term = $('#filter-term').val(); if (term) params.semester_term = term;

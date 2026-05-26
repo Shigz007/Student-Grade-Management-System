@@ -84,8 +84,9 @@
                     <select class="form-control" id="form-grade-student" size="6" required></select>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-6"><label class="form-control-label">学院</label><input type="text" class="form-control" id="form-grade-college" readonly placeholder="自动填充"></div>
-                    <div class="form-group col-md-6"><label class="form-control-label">课程 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-course"></small></label><select class="form-control" id="form-grade-course" disabled required><option value="">请选择课程</option></select></div>
+                    <div class="form-group col-md-4"><label class="form-control-label">学院</label><input type="text" class="form-control" id="form-grade-college" readonly placeholder="自动填充"></div>
+                    <div class="form-group col-md-4"><label class="form-control-label">专业</label><input type="text" class="form-control" id="form-grade-major" readonly placeholder="自动填充"></div>
+                    <div class="form-group col-md-4"><label class="form-control-label">课程 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-course"></small></label><select class="form-control" id="form-grade-course" disabled required><option value="">请选择课程</option></select></div>
                 </div>
                 <div class="form-group"><label class="form-control-label">成绩 (0-100) <span class="text-danger">*</span> <small class="text-danger field-error" id="err-score"></small></label><input type="number" class="form-control" id="form-score" min="0" max="100" step="0.5" required oninput="if(this.value>100)this.value=100;if(this.value<0)this.value=0"></div>
                 <div class="form-row">
@@ -115,7 +116,7 @@ $(function() {
         $('#edit-grade-id').val(''); $('#grade-modal-title').text('录入成绩');
         $('#form-score').val(''); $('#form-term').val('');
         confirmedStudentId = null; confirmedStudentText = '';
-        $('#form-grade-college').val('');
+        $('#form-grade-college').val(''); $('#form-grade-major').val('');
         $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
         $('#form-student-search').val('').trigger('input');
         $('#form-grade-student').val(''); $('#form-year').val('');
@@ -126,7 +127,7 @@ $(function() {
     $('#btn-save-grade').click(function() {
         var id = $('#edit-grade-id').val();
         var data = {
-            student_id: parseInt($('#form-grade-student').val()),
+            student_id: confirmedStudentId || parseInt($('#form-grade-student').val()),
             course_id: parseInt($('#form-grade-course').val()),
             score: parseFloat($('#form-score').val()),
             semester_year: $('#form-year').val(),
@@ -140,9 +141,9 @@ $(function() {
         else if (data.score < 0 || data.score > 100) { $('#err-score').text('成绩0-100'); ok = false; }
         if (!data.semester_year) { $('#err-year').text('请选择学年'); ok = false; }
         if (!data.semester_term) { $('#err-term').text('请选择学期'); ok = false; }
-        if (!ok) return;
-        if (id) { api.updateGrade(id, data).then(function() { $('#grade-modal').modal('hide'); loadGrades(); }); }
-        else { api.addGrade(data).then(function() { $('#grade-modal').modal('hide'); loadGrades(); }); }
+        if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
+        if (id) { api.updateGrade(id, data).then(function(res) { $('#grade-modal').modal('hide'); loadGrades(); showToast(res.message, 'success'); }); }
+        else { api.addGrade(data).then(function(res) { $('#grade-modal').modal('hide'); loadGrades(); showToast(res.message, 'success'); }); }
     });
 
     $(document).on('click', '.btn-edit-grade', function() {
@@ -156,9 +157,15 @@ $(function() {
                 $('#form-grade-college').val(collegeNames[g.college_code] || g.college_code || '');
                 $('#form-score').val(g.score);
                 $('#form-year').val(g.semester_year || ''); $('#form-term').val(g.semester_term || '');
-                populateFormCourses(g.college_code || '', g.course_id);
                 var editStudent = allStudents.find(function(s) { return s.id == g.student_id; });
-                if (editStudent) populateFormYears(editStudent.enrollment_year);
+                if (editStudent) {
+                    var majorName = majorNames[editStudent.college_code + '_' + editStudent.major_code] || editStudent.major_code || '';
+                    $('#form-grade-major').val(majorName);
+                    populateFormYears(editStudent.enrollment_year);
+                    populateFormCourses(editStudent.major_code, g.course_id);
+                } else {
+                    populateFormCourses(g.college_code || '', g.course_id);
+                }
                 $('.field-error').text('');
                 $('#grade-modal').modal('show');
             }
@@ -179,9 +186,9 @@ $(function() {
         });
     }
 
-    function populateFormCourses(collegeCode, selectedCourseId) {
-        if (!collegeCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
-        api.getCourses({ college_code: collegeCode }).then(function(courses) {
+    function populateFormCourses(majorCode, selectedCourseId) {
+        if (!majorCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
+        api.getCourses({ major_code: majorCode }).then(function(courses) {
             var html = '<option value="">请选择课程</option>';
             courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
             $('#form-grade-course').html(html).prop('disabled', false);
@@ -208,6 +215,9 @@ $(function() {
             $('#filter-college').html(filterHtml);
             populateFilterCourses();
         });
+        api.getMajors({}).then(function(majors) {
+            majors.forEach(function(m) { majorNames[m.college_code + '_' + m.code] = m.name; });
+        });
         api.getYears().then(function(years) {
             var filterHtml = '<option value="">全部年份</option>';
             var formHtml = '<option value="">请选择</option>';
@@ -216,7 +226,7 @@ $(function() {
         });
     }
 
-    var allStudents = []; var collegeNames = {}; var confirmedStudentId = null; var confirmedStudentText = '';
+    var allStudents = []; var collegeNames = {}; var majorNames = {}; var confirmedStudentId = null; var confirmedStudentText = '';
     var allGrades = []; var gradePage = 1; var gradePageSize = 10;
 
     function loadStudentsDropdown() {
@@ -236,7 +246,10 @@ $(function() {
             if (student && student.college_code) {
                 confirmedStudentId = student.id; confirmedStudentText = selected.text();
                 $('#form-grade-college').val(collegeNames[student.college_code] || student.college_code);
-                populateFormCourses(student.college_code); populateFormYears(student.enrollment_year);
+                var majorName = majorNames[student.college_code + '_' + student.major_code] || student.major_code || '';
+                $('#form-grade-major').val(majorName);
+                if (student.major_code) { populateFormCourses(student.major_code); }
+                populateFormYears(student.enrollment_year);
             }
         }
     });
@@ -264,13 +277,14 @@ $(function() {
 
     function resetFormFields() {
         confirmedStudentId = null; confirmedStudentText = '';
-        $('#form-grade-college').val(''); $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
+        $('#form-grade-college').val(''); $('#form-grade-major').val('');
+        $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
         $('#form-year').val('');
     }
 
     function resetCollegeOnly() {
         confirmedStudentId = null; confirmedStudentText = '';
-        $('#form-grade-college').val(''); $('#form-grade-student').val('');
+        $('#form-grade-college').val(''); $('#form-grade-major').val(''); $('#form-grade-student').val('');
         $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
     }
 

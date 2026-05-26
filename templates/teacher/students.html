@@ -113,9 +113,9 @@ $(function() {
         if (!data.college_code) { $('#err-college').text('请选择学院'); ok = false; }
         if (!data.major_code) { $('#err-major').text('请选择专业'); ok = false; }
         if (!data.phone) { $('#err-phone').text('请输入电话'); ok = false; }
-        if (!ok) return;
+        if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
         if (id) { api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); }); }
-        else { api.addStudent(data).then(function(res) { $('#student-modal').modal('hide'); loadStudents(); alert(res.message); }); }
+        else { api.addStudent(data).then(function(res) { $('#student-modal').modal('hide'); loadStudents(); showToast(res.message, 'success'); }); }
     });
 
     $(document).on('click', '.btn-edit', function() {
@@ -142,7 +142,7 @@ $(function() {
         $('#form-enrollment-year').val(new Date().getFullYear());
         api.getColleges().then(function(colleges) {
             var html = '<option value="">请选择学院</option>';
-            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.code + ' - ' + c.name + '</option>'; });
+            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; });
             $('#form-college').html(html);
         });
     }
@@ -151,7 +151,7 @@ $(function() {
         var year = $('#form-enrollment-year').val(), college = $('#form-college').val(), major = $('#form-major').val();
         if (!year || !college || !major) { clearStudentNo(); return; }
         api.getNextStudentNo({ year: year, college: college, major: major, 'class': '01' }).then(function(res) {
-            if (res.error) { alert(res.error); return; }
+            if (res.error) { showToast(res.error, 'danger'); return; }
             $('#form-student-no').val(res.student_no); $('#form-class-seq').val(res.class_seq);
         });
     }

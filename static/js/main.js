@@ -1,3 +1,19 @@
+function showToast(message, type) {
+    type = type || 'info';
+    var icons = { success: 'fa-check-circle', danger: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+    var $container = $('#toast-container');
+    if (!$container.length) { $container = $('<div id="toast-container" class="toast-container"></div>').appendTo('body'); }
+    var $toast = $(
+        '<div class="alert alert-' + type + ' fade show mb-2" role="alert" style="position:relative;padding-right:56px;">' +
+        '<span class="alert-inner--icon mr-2"><i class="fas ' + (icons[type] || icons.info) + '"></i></span>' +
+        '<span class="alert-inner--text">' + message + '</span>' +
+        '<button type="button" class="toast-close" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:none;border:none;font-size:1.6rem;line-height:1;padding:4px 8px;cursor:pointer;color:inherit;opacity:0.55;" onclick="$(this).closest(\'.alert\').alert(\'close\')">&times;</button>' +
+        '</div>'
+    );
+    $container.append($toast);
+    setTimeout(function() { $toast.alert('close'); }, 3500);
+}
+
 function checkAuth() {
     var token = localStorage.getItem('token');
     if (!token) {
@@ -67,12 +83,11 @@ $(function() {
         var confirmPw = $('#profile-confirm-pw').val();
 
         var changingPw = oldPw || newPw || confirmPw;
-        var changingName = newName !== user.username;
+        var changingName = newName !== '' && newName !== user.username;
 
         $('#profile-modal .field-error').text('');
 
-        if (!newName) { $('#err-username').text('请输入用户名'); return; }
-        if (!changingName && !changingPw) { $('#err-username').text('没有修改任何内容'); return; }
+        if (!changingName && !changingPw) { $('#profile-modal').modal('hide'); return; }
 
         var ok = true;
         if (changingPw) {
@@ -80,9 +95,9 @@ $(function() {
             if (!newPw) { $('#err-new-pw').text('请输入新密码'); ok = false; }
             if (!confirmPw) { $('#err-confirm-pw').text('请确认新密码'); ok = false; }
             if (newPw && newPw.length < 6) { $('#err-new-pw').text('新密码至少6位'); ok = false; }
-            if (newPw && confirmPw && newPw !== confirmPw) { $('#err-confirm-pw').text('两次密码不一致'); ok = false; }
+            if (newPw && confirmPw && newPw !== confirmPw) { $('#err-confirm-pw').text('两次密码不一致'); showToast('两次密码不一致', 'danger'); return; }
         }
-        if (!ok) return;
+        if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
 
         var promises = [];
         var msgs = [];
@@ -104,11 +119,11 @@ $(function() {
         }
 
         $.when.apply($, promises).then(function() {
-            alert(msgs.join('；'));
+            showToast(msgs.join('；'), 'success');
             $('#profile-modal').modal('hide');
         }).fail(function(xhr) {
             var msg = (xhr.responseJSON && xhr.responseJSON.error) || '操作失败';
-            alert(msg);
+            showToast(msg, 'danger');
         });
     });
 });

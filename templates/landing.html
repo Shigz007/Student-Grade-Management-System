@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>学生成绩管理系统 — Flask + SQLite 前后端分离架构</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;700&family=Playfair+Display:wght@400;600;700&display=swap" media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;700&family=Playfair+Display:wght@400;600;700&display=swap"></noscript>
+    <link type="text/css" href="/static/css/landing.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════ -->
+<nav class="lp-nav">
+    <a href="#" class="lp-nav-brand">成绩管理系统</a>
+    <button class="lp-nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+    </button>
+    <ul class="lp-nav-links">
+        <li><a href="#hero">系统概览</a></li>
+        <li><a href="#architecture">双库架构</a></li>
+        <li><a href="#roles">权限体系</a></li>
+        <li><a href="#student-id">学号生成</a></li>
+        <li><a href="#grade-search">成绩搜索</a></li>
+        <li><a href="#tech-stack">技术栈</a></li>
+        <li><a href="/login" class="lp-nav-login">登录</a></li>
+    </ul>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 1 — HERO
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-hero" id="hero">
+    <div>
+        <div class="lp-hero-rule anim-rule" style="transform-origin:center"></div>
+        <h1 class="lp-hero-title anim-fade-up">
+            一个系统<span>，</span>管全校成绩
+        </h1>
+        <div class="lp-hero-rule anim-rule" style="transform-origin:center" data-animate-delay="200"></div>
+
+        <div style="margin-top:56px" class="anim-fade-up" data-animate-delay="400">
+            <p class="lp-hero-strike">几十万的教务系统</p>
+            <p class="lp-hero-sub">一个人<span>就能</span>搭起来</p>
+        </div>
+
+        <div class="lp-hero-stats anim-fade-up" data-animate-delay="600">
+            <div>
+                <div class="lp-hero-stat-num" data-count-to="11">0</div>
+                <div class="lp-hero-stat-label">学院</div>
+            </div>
+            <div class="lp-hero-divider"></div>
+            <div>
+                <div class="lp-hero-stat-num" data-count-to="28">0</div>
+                <div class="lp-hero-stat-label">专业</div>
+            </div>
+            <div class="lp-hero-divider"></div>
+            <div>
+                <div class="lp-hero-stat-num" data-count-to="238">0</div>
+                <div class="lp-hero-stat-label">课程</div>
+            </div>
+            <div class="lp-hero-divider"></div>
+            <div>
+                <div class="lp-hero-stat-num" data-count-to="1729">0</div>
+                <div class="lp-hero-stat-label">学生</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 2 — DUAL DATABASE ARCHITECTURE
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-section" id="architecture">
+    <div class="lp-container">
+        <div class="lp-two-col">
+            <!-- Left -->
+            <div class="anim-reveal-left">
+                <div class="lp-section-label">Architecture</div>
+                <h2 class="lp-section-heading">双数据库<br>分离架构</h2>
+                <p class="lp-section-body">
+                    SQLite ATTACH DATABASE 方案，将用户数据与学校结构数据分库存储。
+                    <code style="font-family:var(--lp-font-mono);color:var(--lp-accent)">data.db</code> 存用户、学生、成绩，
+                    <code style="font-family:var(--lp-font-mono);color:var(--lp-accent)">school.db</code> 存学院、专业、课程。
+                    单连接跨库 JOIN 查询，零性能损耗。
+                </p>
+            </div>
+            <!-- Right visual -->
+            <div class="anim-reveal-right" data-animate-delay="150">
+                <div class="lp-db-blocks">
+                    <div class="lp-db-block">
+                        <div class="lp-db-name">data.db</div>
+                        <div class="lp-db-sub">用户数据</div>
+                    </div>
+                    <div class="lp-db-block">
+                        <div class="lp-db-name">school.db</div>
+                        <div class="lp-db-sub">学校数据</div>
+                    </div>
+                </div>
+                <div class="lp-attach-bridge" style="justify-content:center">
+                    <div class="lp-attach-line"></div>
+                    <div class="lp-attach-dot"></div>
+                    <div class="lp-attach-line"></div>
+                </div>
+                <div style="text-align:center;font-family:var(--lp-font-mono);font-size:14px;color:var(--lp-accent);letter-spacing:0.1em;margin-bottom:20px">
+                    ATTACH AS school
+                </div>
+                <div class="lp-sql-table" style="justify-content:center">
+                    <div class="lp-sql-table-item"><span class="tbl-label">Table</span>users</div>
+                    <div class="lp-sql-table-item"><span class="tbl-label">Table</span>students</div>
+                    <div class="lp-sql-table-item"><span class="tbl-label">Table</span>grades</div>
+                </div>
+                <div class="lp-sql-block">
+                    <span class="kw">SELECT</span> s.student_no, s.name, c.name AS course_name,<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cl.name AS college_name, g.score<br>
+                    <span class="kw">FROM</span> grades g<br>
+                    <span class="kw">JOIN</span> students s &nbsp;<span class="kw">ON</span> g.student_id = s.id<br>
+                    <span class="kw">JOIN</span> courses c &nbsp;&nbsp;<span class="kw">ON</span> g.course_id = c.id<br>
+                    <span class="kw">JOIN</span> colleges cl &nbsp;<span class="kw">ON</span> c.college_code = cl.code
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 3 — THREE ROLES & JWT
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-section" id="roles" style="background:var(--lp-white)">
+    <div class="lp-container">
+        <div style="text-align:center;margin-bottom:60px" class="anim-fade-up">
+            <div class="lp-section-label">Role-Based Access</div>
+            <h2 class="lp-section-heading">三角色 · 细粒度权限</h2>
+        </div>
+
+        <div class="lp-role-cards">
+            <div class="lp-role-card accent anim-scale-in" data-animate-delay="0">
+                <div class="lp-role-card-title">管理员</div>
+                <div class="lp-role-card-en">Admin</div>
+                <ul class="lp-role-card-perms">
+                    <li>全校学生管理</li>
+                    <li>全部成绩录入</li>
+                    <li>所有学院数据</li>
+                    <li>仪表盘总览</li>
+                </ul>
+            </div>
+            <div class="lp-role-card anim-scale-in" data-animate-delay="150">
+                <div class="lp-role-card-title">教师</div>
+                <div class="lp-role-card-en">Teacher</div>
+                <ul class="lp-role-card-perms">
+                    <li>本院学生管理</li>
+                    <li>本院成绩录入</li>
+                </ul>
+            </div>
+            <div class="lp-role-card anim-scale-in" data-animate-delay="300">
+                <div class="lp-role-card-title">学生</div>
+                <div class="lp-role-card-en">Student</div>
+                <ul class="lp-role-card-perms">
+                    <li>个人成绩查询</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align:center" class="anim-fade-up" data-animate-delay="400">
+            <div class="lp-section-label" style="margin-top:48px">JWT Authentication</div>
+            <div class="lp-jwt-flow" style="margin-bottom:28px">
+                <div class="lp-jwt-node">登录</div>
+                <div class="lp-jwt-arrow">→</div>
+                <div class="lp-jwt-token">eyJhbGciOi...token...</div>
+                <div class="lp-jwt-arrow">→</div>
+                <div class="lp-jwt-node">API 请求</div>
+            </div>
+            <p style="font-size:16px;color:var(--lp-text-mute)">HS256 · Bearer Token · 每次请求校验</p>
+
+            <div class="lp-code-block" style="max-width:600px;margin:32px auto 0;text-align:left">
+<span class="decorator">@require_role</span>('admin', 'teacher')
+<span class="decorator">def</span> <span class="func">add_grade</span>():
+    ...
+            </div>
+            <div style="display:flex;gap:40px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+                <span style="font-family:var(--lp-font-mono);font-size:14px;color:var(--lp-accent)">/api/grades/add</span>
+                <span style="font-size:14px;color:var(--lp-text-mute)">admin / teacher</span>
+                <span style="font-family:var(--lp-font-mono);font-size:14px;color:var(--lp-accent)">/api/students/all</span>
+                <span style="font-size:14px;color:var(--lp-text-mute)">admin / teacher</span>
+                <span style="font-family:var(--lp-font-mono);font-size:14px;color:var(--lp-accent)">/api/stats/dashboard</span>
+                <span style="font-size:14px;color:var(--lp-text-mute)">admin / teacher</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 4 — STUDENT ID
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-section" id="student-id">
+    <div class="lp-container">
+        <div style="text-align:center;margin-bottom:60px" class="anim-fade-up">
+            <div class="lp-section-label">Auto-Generated Student ID</div>
+            <h2 class="lp-section-heading">10 位学号 · 自动生成</h2>
+        </div>
+
+        <!-- ID breakdown -->
+        <div class="lp-id-breakdown anim-scale-in" data-animate-delay="100">
+            <div class="lp-id-slot">
+                <div class="lp-id-slot-box">2026</div>
+                <div class="lp-id-slot-label">年份</div>
+            </div>
+            <div class="lp-id-slot">
+                <div class="lp-id-slot-box">01</div>
+                <div class="lp-id-slot-label">学院</div>
+            </div>
+            <div class="lp-id-slot">
+                <div class="lp-id-slot-box">01</div>
+                <div class="lp-id-slot-label">专业</div>
+            </div>
+            <div class="lp-id-slot">
+                <div class="lp-id-slot-box">01</div>
+                <div class="lp-id-slot-label">班级</div>
+            </div>
+        </div>
+        <div class="lp-id-full anim-fade-up" data-animate-delay="300">2026010101</div>
+
+        <div class="lp-two-col" style="margin-top:48px">
+            <!-- Cascade -->
+            <div class="anim-reveal-left">
+                <div class="lp-section-label" style="margin-bottom:24px">Cascade Selection</div>
+                <div class="lp-cascade-flow">
+                    <div class="lp-cascade-node">选择学院<br><small style="font-size:13px;color:var(--lp-text-mute)">API 加载专业列表</small></div>
+                    <div class="lp-cascade-arrow">→</div>
+                    <div class="lp-cascade-node">选择专业<br><small style="font-size:13px;color:var(--lp-text-mute)">自动计算班级序号</small></div>
+                    <div class="lp-cascade-arrow">→</div>
+                    <div class="lp-cascade-node" style="border-color:var(--lp-text)">学号生成<br><small style="font-size:13px;color:var(--lp-text-mute)">自动填入，不可修改</small></div>
+                </div>
+            </div>
+            <!-- Class capacity -->
+            <div class="anim-reveal-right" data-animate-delay="150">
+                <div class="lp-section-label" style="margin-bottom:24px">Class Capacity: 40</div>
+                <div class="lp-class-grid">
+                    <div class="lp-class-box full">
+                        <div class="lp-class-num">40</div>
+                        <div class="lp-class-cap">/40</div>
+                        <div class="lp-class-name">01班</div>
+                        <div class="lp-class-tag">已满 → 进位</div>
+                    </div>
+                    <div class="lp-class-box">
+                        <div class="lp-class-num">12</div>
+                        <div class="lp-class-cap">/40</div>
+                        <div class="lp-class-name">02班</div>
+                    </div>
+                    <div class="lp-class-box" style="opacity:0.35">
+                        <div class="lp-class-num">0</div>
+                        <div class="lp-class-cap">/40</div>
+                        <div class="lp-class-name">03班</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:48px" class="anim-fade-up" data-animate-delay="300">
+            <div class="lp-section-label" style="margin-bottom:20px">Form Validation</div>
+            <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+                <span style="padding:10px 24px;border:1px solid var(--lp-text);font-size:18px">姓名 *</span>
+                <span style="padding:10px 24px;border:1px solid var(--lp-text);font-size:18px">性别 *</span>
+                <span style="padding:10px 24px;border:1px solid var(--lp-text);font-size:18px">学院 *</span>
+                <span style="padding:10px 24px;border:1px solid var(--lp-text);font-size:18px">专业 *</span>
+                <span style="padding:10px 24px;border:1px solid var(--lp-text);font-size:18px">电话 *</span>
+            </div>
+            <p style="font-size:15px;color:var(--lp-text-mute);margin-top:16px">
+                少填一个 → <span style="color:#c9302c">红色提示</span> → 无法提交
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 5 — GRADE SEARCH
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-section" id="grade-search" style="background:var(--lp-white)">
+    <div class="lp-container">
+        <div style="text-align:center;margin-bottom:60px" class="anim-fade-up">
+            <div class="lp-section-label">Fuzzy Search</div>
+            <h2 class="lp-section-heading">成绩管理 &<br>中英文混合搜索</h2>
+        </div>
+
+        <!-- Grade entry flow -->
+        <div style="text-align:center;margin-bottom:60px" class="anim-fade-up" data-animate-delay="100">
+            <div class="lp-section-label" style="margin-bottom:24px">Grade Entry</div>
+            <div class="lp-search-flow">
+                <div class="lp-search-node">选学期</div>
+                <div class="lp-search-arrow">→</div>
+                <div class="lp-search-node">选课程</div>
+                <div class="lp-search-arrow">→</div>
+                <div class="lp-search-node">选学生</div>
+                <div class="lp-search-arrow">→</div>
+                <div class="lp-search-node">填分数</div>
+            </div>
+            <p style="font-size:16px;color:var(--lp-text-mute);margin-top:20px">分数范围 0–100 · 管理员录全校 · 教师录本院</p>
+        </div>
+
+        <!-- Search visual -->
+        <div style="text-align:center;margin-bottom:60px" class="anim-scale-in" data-animate-delay="200">
+            <div class="lp-search-input">计算机刘佳</div>
+            <p style="font-size:18px;color:var(--lp-text-mute)">中英文混合，5 个字</p>
+        </div>
+
+        <!-- Regex tokenization -->
+        <div class="lp-two-col" style="margin-bottom:60px">
+            <div style="text-align:center" class="anim-reveal-left">
+                <div class="lp-section-label" style="margin-bottom:20px">Regex Tokenization</div>
+                <p style="font-family:var(--lp-font-mono);font-size:14px;color:var(--lp-text-mute);margin-bottom:20px;word-break:break-all">
+                    re.findall(r'[一-鿿]|[^一-鿿]+', part)
+                </p>
+                <div class="lp-token-grid">
+                    <div class="lp-token-box">计</div>
+                    <div class="lp-token-box">算</div>
+                    <div class="lp-token-box">机</div>
+                </div>
+                <p style="font-size:13px;color:var(--lp-text-mute);margin-bottom:20px">中文 → 逐字拆分</p>
+                <div class="lp-token-grid">
+                    <div class="lp-token-box">刘</div>
+                    <div class="lp-token-box">佳</div>
+                </div>
+                <p style="font-size:13px;color:var(--lp-text-mute)">保持连续</p>
+            </div>
+            <div style="text-align:center" class="anim-reveal-right" data-animate-delay="150">
+                <div class="lp-section-label" style="margin-bottom:20px">Token Matching</div>
+                <div class="lp-token-grid" style="margin-bottom:32px">
+                    <div class="lp-token-box" style="width:44px;height:44px;font-size:20px">计</div>
+                    <div class="lp-token-box" style="width:44px;height:44px;font-size:20px">算</div>
+                    <div class="lp-token-box" style="width:44px;height:44px;font-size:20px">机</div>
+                    <div class="lp-token-box" style="width:44px;height:44px;font-size:20px">刘</div>
+                    <div class="lp-token-box" style="width:44px;height:44px;font-size:20px">佳</div>
+                </div>
+                <div class="lp-match-table">
+                    <div class="lp-match-row">
+                        <span class="lp-match-label">学号</span>
+                        <span class="lp-match-value">2026010101</span>
+                        <span class="lp-match-dot"></span>
+                    </div>
+                    <div class="lp-match-row">
+                        <span class="lp-match-label">姓名</span>
+                        <span class="lp-match-value">刘佳</span>
+                        <span class="lp-match-dot"></span>
+                    </div>
+                    <div class="lp-match-row">
+                        <span class="lp-match-label">课程</span>
+                        <span class="lp-match-value">计算机组成原理</span>
+                        <span class="lp-match-dot"></span>
+                    </div>
+                    <div class="lp-match-row">
+                        <span class="lp-match-label">学院</span>
+                        <span class="lp-match-value">计算机学院</span>
+                        <span class="lp-match-dot"></span>
+                    </div>
+                </div>
+                <p style="font-size:17px;color:var(--lp-accent);margin-top:20px">
+                    5 个 token 各自匹配所有字段 → 找到！
+                </p>
+            </div>
+        </div>
+
+        <!-- Any-order + semester -->
+        <div style="text-align:center" class="anim-fade-up" data-animate-delay="300">
+            <div class="lp-section-heading" style="font-size:40px;font-weight:300;margin-bottom:24px">
+                任意<span style="color:var(--lp-accent)">顺序</span>
+            </div>
+            <div class="lp-query-tags">
+                <div class="lp-query-tag">计算机 刘佳</div>
+                <div class="lp-query-tag">刘佳 计算机</div>
+                <div class="lp-query-tag">2020 第一学期</div>
+            </div>
+            <p style="font-size:18px;color:var(--lp-text)">不管先输什么<span style="color:var(--lp-accent)">，</span>都能搜到</p>
+
+            <div style="margin-top:48px" class="anim-scale-in" data-animate-delay="400">
+                <div class="lp-section-label" style="margin-bottom:20px">Semester Matching</div>
+                <div style="display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
+                    <span style="padding:14px 28px;border:1px solid var(--lp-text);font-size:22px">第一学期</span>
+                    <span style="font-size:22px;color:var(--lp-rule)">→</span>
+                    <span style="padding:14px 28px;border:1px solid var(--lp-accent);font-size:22px">
+                        <span style="color:var(--lp-text-mute)">第</span>
+                        <span style="color:var(--lp-accent)">1</span>
+                        <span style="color:var(--lp-text-mute)">学期</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 6 — DASHBOARD & TECH STACK
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-section" id="tech-stack">
+    <div class="lp-container">
+        <div style="text-align:center;margin-bottom:60px" class="anim-fade-up">
+            <div class="lp-section-label">Dashboard</div>
+            <h2 class="lp-section-heading">仪表盘 & 数据总览</h2>
+        </div>
+
+        <!-- Bar chart -->
+        <div class="lp-two-col" style="margin-bottom:60px">
+            <div class="anim-reveal-left">
+                <div class="lp-bars">
+                    <div class="lp-bar-col"><div class="lp-bar-num">312</div><div class="lp-bar" data-h="210px" style="height:0;opacity:0.8"></div><div class="lp-bar-label">计算机</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">228</div><div class="lp-bar" data-h="155px" style="height:0;opacity:0.58"></div><div class="lp-bar-label">经管</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">198</div><div class="lp-bar" data-h="178px" style="height:0;opacity:0.67"></div><div class="lp-bar-label">外语</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">176</div><div class="lp-bar" data-h="138px" style="height:0;opacity:0.52"></div><div class="lp-bar-label">数学</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">145</div><div class="lp-bar" data-h="112px" style="height:0;opacity:0.42"></div><div class="lp-bar-label">法学</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">132</div><div class="lp-bar" data-h="92px" style="height:0;opacity:0.35"></div><div class="lp-bar-label">文学</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">118</div><div class="lp-bar" data-h="102px" style="height:0;opacity:0.38"></div><div class="lp-bar-label">艺术</div></div>
+                    <div class="lp-bar-col"><div class="lp-bar-num">96</div><div class="lp-bar" data-h="76px" style="height:0;opacity:0.29"></div><div class="lp-bar-label">体育</div></div>
+                </div>
+                <p style="text-align:center;font-size:15px;color:var(--lp-text-mute);margin-top:16px">ApexCharts 学院人数柱状图</p>
+            </div>
+            <div class="anim-reveal-right" data-animate-delay="150">
+                <div class="lp-score-bars">
+                    <div class="lp-score-col"><div class="lp-score-range">0–59</div><div class="lp-score-bar" data-h="45px" style="height:0;background:#c9302c"></div><div class="lp-score-label">不及格</div></div>
+                    <div class="lp-score-col"><div class="lp-score-range">60–69</div><div class="lp-score-bar" data-h="78px" style="height:0;background:#e6a817"></div><div class="lp-score-label">及格</div></div>
+                    <div class="lp-score-col"><div class="lp-score-range">70–79</div><div class="lp-score-bar" data-h="118px" style="height:0;background:#5fc7e8"></div><div class="lp-score-label">中等</div></div>
+                    <div class="lp-score-col"><div class="lp-score-range">80–89</div><div class="lp-score-bar" data-h="160px" style="height:0;background:#4a9eff"></div><div class="lp-score-label">良好</div></div>
+                    <div class="lp-score-col"><div class="lp-score-range">90–100</div><div class="lp-score-bar" data-h="115px" style="height:0;background:var(--lp-accent)"></div><div class="lp-score-label">优秀</div></div>
+                </div>
+                <p style="text-align:center;font-size:15px;color:var(--lp-text-mute);margin-top:16px">5 个分数段分布统计</p>
+            </div>
+        </div>
+
+        <!-- Data scale grid -->
+        <div class="lp-data-grid anim-fade-up" data-animate-delay="200">
+            <div class="lp-data-card accent">
+                <div class="lp-data-num" data-count-to="11">0</div>
+                <div class="lp-data-label">学院</div>
+                <div class="lp-data-detail">计算机 · 数学 · 物理 · 化学 · 生科 · 经管 · 外语 · 法学 · 文学 · 艺术 · 体育</div>
+            </div>
+            <div class="lp-data-card">
+                <div class="lp-data-num" data-count-to="28">0</div>
+                <div class="lp-data-label">专业</div>
+                <div class="lp-data-detail">计科 · 软工 · AI · 数学 · 统计 · 物理 · 金融 · 英语 · 法学 · 汉语言 ...</div>
+            </div>
+            <div class="lp-data-card">
+                <div class="lp-data-num" data-count-to="238">0</div>
+                <div class="lp-data-label">课程</div>
+                <div class="lp-data-detail">高数 · 线代 · 编译原理 · 机器学习 · 新闻采访 ...</div>
+            </div>
+            <div class="lp-data-card accent">
+                <div class="lp-data-num" data-count-to="1729">0</div>
+                <div class="lp-data-label">学生</div>
+                <div class="lp-data-detail">预置测试数据 + 成绩记录，开箱即用</div>
+            </div>
+        </div>
+
+        <!-- Tech stack -->
+        <div style="text-align:center;margin-top:60px" class="anim-fade-up" data-animate-delay="400">
+            <div class="lp-section-label" style="margin-bottom:32px">Tech Stack</div>
+            <div class="lp-tech-badges">
+                <div class="lp-tech-badge">
+                    <div class="lp-tech-name">Flask</div>
+                    <div class="lp-tech-desc">Python Web</div>
+                </div>
+                <div class="lp-tech-badge">
+                    <div class="lp-tech-name">SQLite</div>
+                    <div class="lp-tech-desc">双库存储</div>
+                </div>
+                <div class="lp-tech-badge">
+                    <div class="lp-tech-name">Bootstrap 4</div>
+                    <div class="lp-tech-desc">UI 框架</div>
+                </div>
+                <div class="lp-tech-badge">
+                    <div class="lp-tech-name">jQuery</div>
+                    <div class="lp-tech-desc">交互逻辑</div>
+                </div>
+                <div class="lp-tech-badge">
+                    <div class="lp-tech-name">ApexCharts</div>
+                    <div class="lp-tech-desc">图表可视化</div>
+                </div>
+            </div>
+            <p style="font-size:16px;color:var(--lp-text-mute);margin-top:28px">
+                Boomerang UI Kit · 前后端分离 · RESTful API · Blueprint 路由
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 7 — CTA
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="lp-cta" id="get-started">
+    <div class="lp-section-label">Get Started</div>
+
+    <div class="lp-terminal">
+        <div><span class="prompt">$</span> <span class="type-line cmd" data-text="python seed.py"></span><span class="cursor"></span></div>
+        <div style="margin-top:16px"><span class="prompt">$</span> <span class="type-line cmd" data-text="python app.py"></span><span class="cursor"></span></div>
+        <div class="output" style="margin-top:24px">Running on http://127.0.0.1:5000</div>
+    </div>
+
+    <div class="lp-cta-title anim-fade-up">
+        一个系统<span>，</span>管全校成绩
+    </div>
+    <p class="lp-cta-sub anim-fade-up" data-animate-delay="100">
+        Flask + SQLite · 零外部依赖 · Nginx 反代就上线
+    </p>
+    <a href="/login" class="lp-cta-btn anim-scale-in" data-animate-delay="200">登录系统</a>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 8 — FOOTER
+     ═══════════════════════════════════════════════════════════════ -->
+<footer class="lp-footer">
+    <div style="margin-bottom:8px">学生成绩管理系统</div>
+    <div>Flask + SQLite + Bootstrap 4 · 前后端分离架构</div>
+</footer>
+
+<script src="/static/js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+/* ─── Coldopen · Chapter 1 ─── */
+.co-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--stage-pad-y) var(--stage-pad-x);
+}
+
+/* ─── Step 0: Hero hook ─── */
+.co-hero-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.co-hero-line {
+  font-family: var(--font-display-cn);
+  font-size: 96px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.co-accent-dot {
+  color: var(--accent);
+}
+
+.co-rule-top {
+  width: 320px;
+  height: 0;
+  border-top: var(--rule-w) var(--rule-style) var(--accent);
+  opacity: 0.6;
+}
+
+.co-rule-bottom {
+  width: 480px;
+  height: 0;
+  border-top: var(--rule-w) var(--rule-style) var(--rule);
+  opacity: 0.5;
+}
+
+/* ─── Step 1: Contrast subtitle ─── */
+.co-contrast-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.co-strikethrough {
+  font-family: var(--font-body);
+  font-size: 42px;
+  color: var(--text-mute);
+  text-decoration: line-through;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 3px;
+  letter-spacing: 0.03em;
+}
+
+.co-highlight {
+  font-family: var(--font-display-cn);
+  font-size: 56px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+
+.co-highlight .co-accent {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 64px;
+  font-weight: 500;
+}
+
+/* ─── Step 2: Tech callouts ─── */
+.co-tech-row {
+  display: flex;
+  gap: 80px;
+  align-items: flex-start;
+}
+
+.co-tech-callout {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.co-tech-leader {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 2px;
+  height: 40px;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.co-tech-leader::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.co-tech-badge {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+  padding: 16px 36px;
+  border: 2px solid var(--rule);
+  background: var(--surface-2);
+}
+
+.co-tech-label {
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--text-mute);
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+/* ─── Step 3: Data strip ─── */
+.co-data-strip {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.co-data-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.co-data-num {
+  font-family: var(--font-mono);
+  font-size: 64px;
+  font-weight: 500;
+  color: var(--accent);
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.co-data-label {
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+}
+
+.co-data-sep {
+  width: 0;
+  height: 48px;
+  border-left: var(--rule-w) var(--rule-style) var(--rule);
+}
+
+/* ─── Shared animations ─── */
+.co-fade-in {
+  animation: coFadeIn 600ms ease both;
+}
+
+.co-fade-up {
+  animation: coFadeUp 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.co-scale-in {
+  animation: coScaleIn 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.co-delay-1 { animation-delay: 200ms; }
+.co-delay-2 { animation-delay: 500ms; }
+.co-delay-3 { animation-delay: 800ms; }
+.co-delay-4 { animation-delay: 1100ms; }
+
+@keyframes coFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes coFadeUp {
+  from { opacity: 0; transform: translateY(36px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes coScaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}

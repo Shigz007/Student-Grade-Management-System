@@ -65,10 +65,10 @@ def student_grades():
     return render_template('student/grades.html')
 
 
-# === Root redirect ===
+# === Landing page ===
 @app.route('/')
 def index():
-    return render_template('login.html')
+    return render_template('landing.html')
 
 
 if __name__ == '__main__':

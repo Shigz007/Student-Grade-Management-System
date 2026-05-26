@@ -1,0 +1,63 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * Theme · indigo-porcelain
+ *   Indigo as ink on porcelain white — the indigo IS the ink, not just
+ *   an accent. Playfair Display + Noto Serif SC + IBM Plex Sans body.
+ *   Academic, scholarly, like a Chinese journal of contemporary thought.
+ *
+ *   character knobs:
+ *     • hero numbers   — Playfair Display, weight 600 (serif presence)
+ *     • rule           — 1px solid warm grey
+ *     • card           — subtle radius (scholarly but not brutalist)
+ *     • surface        — clean porcelain, no grid pattern
+ *     • motion         — gentle ease (academic isn't punchy)
+ * ───────────────────────────────────────────────────────────────────── */
+:root {
+  /* ─── palette: indigo porcelain ─── */
+  --shell:        #e4e8ec;
+  --surface:      #f1f3f5;
+  --surface-2:    #e8ecf0;
+  --surface-3:    #d5dbe2;
+  --text:         #0a1f3d;             /* indigo IS the ink */
+  --text-2:       #1a3050;
+  --text-mute:    #64748b;
+  --text-faint:   #94a3b8;
+  --rule:         #d1d5db;
+  --accent:       #1e3a8a;             /* warm indigo */
+  --accent-soft:  rgba(30, 58, 138, 0.08);
+  --accent-glow:  rgba(30, 58, 138, 0.35);
+
+  /* ─── fonts: serif display + sans body ─── */
+  --font-display-cn: "Noto Serif SC", "STSong", "SimSun", "Songti SC", serif;
+  --font-display-en: "Playfair Display", "Georgia", "Times New Roman", serif;
+  --font-body:       "IBM Plex Sans", "Noto Serif SC", "Microsoft YaHei", -apple-system, sans-serif;
+  --font-mono:       "JetBrains Mono", "Consolas", "SF Mono", ui-monospace, monospace;
+  --font-features:   "tnum", "ss01", "cv02";
+
+  /* ─── motion: gentle ease (academic isn't punchy) ─── */
+  --dur-quick:     220ms;
+  --dur-base:      450ms;
+  --dur-slow:      700ms;
+  --dur-cinematic: 1100ms;
+
+  /* ─── design identity: scholarly porcelain ─── */
+  --r-card:        2px;
+  --r-stage:       0;
+  --rule-w:        1px;
+  --rule-style:    solid;
+  --hero-num-font:    var(--font-display-en);
+  --hero-num-style:   normal;
+  --hero-num-weight:  600;
+  --hero-num-track:   -0.02em;
+  --stage-pad-x:   96px;
+  --stage-pad-y:   72px;
+  --card-shadow:   inset 0 0 0 1px var(--rule);
+  --shadow-stage:
+    0 40px 120px rgba(10, 31, 61, 0.12),
+    0 0 0 1px rgba(10, 31, 61, 0.04);
+
+  /* ─── decoration: clean porcelain — no grid pattern ─── */
+  --surface-pattern: none;
+  --surface-pattern-size: 0;
+  --surface-pattern-blend: normal;
+  --surface-pattern-opacity: 0;
+}

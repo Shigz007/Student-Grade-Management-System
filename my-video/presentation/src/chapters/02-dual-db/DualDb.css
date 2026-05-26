@@ -1,0 +1,285 @@
+/* ─── DualDb · Chapter 2 ─── */
+.dd-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--stage-pad-y) var(--stage-pad-x);
+}
+
+/* ─── Section label ─── */
+.dd-section-label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 40px;
+}
+
+/* ─── Step 0: Two DB blocks ─── */
+.dd-db-row {
+  display: flex;
+  gap: 120px;
+  align-items: center;
+}
+
+.dd-db-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.dd-db-icon {
+  width: 140px;
+  height: 140px;
+  border: 1px solid var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.dd-db-icon::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 1px;
+  background: var(--text);
+}
+
+.dd-db-icon::after {
+  content: '';
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 1px;
+  background: var(--text);
+}
+
+.dd-db-name {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.dd-db-sub {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-mute, #6b7280);
+  letter-spacing: 0.06em;
+}
+
+/* ─── Step 1–2: Table cards ─── */
+.dd-tables-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.dd-db-label {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.dd-table-cards {
+  display: flex;
+  gap: 20px;
+}
+
+.dd-table-card {
+  padding: 20px 32px;
+  border: 1px solid var(--text);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.dd-table-card .dd-col-name {
+  display: block;
+  font-size: 11px;
+  color: var(--text-mute, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.dd-table-card.accent {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ─── Step 3: ATTACH bridge ─── */
+.dd-bridge-scene {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.dd-bridge-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.dd-bridge-db {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+  padding: 24px 40px;
+  border: 1px solid var(--text);
+  background: var(--surface);
+}
+
+.dd-bridge-db span {
+  color: var(--accent);
+}
+
+.dd-bridge-line {
+  display: flex;
+  align-items: center;
+  width: 140px;
+  position: relative;
+}
+
+.dd-bridge-line::before {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--accent);
+}
+
+.dd-bridge-line::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  position: absolute;
+  right: 0;
+}
+
+.dd-bridge-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 12px;
+}
+
+/* ─── Step 4: SQL query ─── */
+.dd-sql-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  max-width: 960px;
+}
+
+.dd-sql-block {
+  border: 1px solid var(--text);
+  background: var(--surface);
+  padding: 28px 36px;
+  width: 100%;
+}
+
+.dd-sql-line {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.dd-sql-line .kw { color: var(--accent); font-weight: 500; }
+.dd-sql-line .tbl { color: var(--text); }
+.dd-sql-line .dim { color: var(--text-mute, #6b7280); }
+
+.dd-result-strip {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+
+.dd-result-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dd-result-val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.dd-result-col {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--text-mute, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Animations ─── */
+.dd-fade-in {
+  animation: ddFadeIn 500ms ease both;
+}
+.dd-fade-up {
+  animation: ddFadeUp 600ms ease both;
+}
+.dd-reveal-right {
+  animation: ddRevealRight 500ms ease both;
+}
+.dd-pop {
+  animation: ddPop 450ms ease both;
+}
+.dd-type-line {
+  animation: ddFadeIn 400ms ease both;
+}
+
+.dd-delay-1 { animation-delay: 150ms; }
+.dd-delay-2 { animation-delay: 350ms; }
+.dd-delay-3 { animation-delay: 550ms; }
+.dd-delay-4 { animation-delay: 750ms; }
+.dd-delay-5 { animation-delay: 950ms; }
+.dd-delay-6 { animation-delay: 1150ms; }
+
+@keyframes ddFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ddFadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ddRevealRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes ddPop {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}

@@ -1,0 +1,21 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * fonts.css — Font stack definitions.
+ *
+ * System fonts provide immediate rendering. Google Fonts are preloaded
+ * via <link> in index.html for visual polish (non-blocking fallback).
+ *
+ * If a theme needs a specific weight not in the preload list, add it
+ * to index.html and the THEMES.md "fonts loaded by default" list.
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* System font fallbacks are configured in tokens.css via the --font-*
+   custom properties. This file exists to allow themes to @import
+   additional fonts without blocking rendering.
+
+   For users in regions where Google Fonts is inaccessible, the
+   system font fallbacks provide a good out-of-the-box experience:
+
+   - Inter → Helvetica Neue / Arial (sans-serif)
+   - JetBrains Mono → SF Mono / Consolas / monospace
+   - Noto Sans SC → Microsoft YaHei / SimHei / sans-serif
+*/

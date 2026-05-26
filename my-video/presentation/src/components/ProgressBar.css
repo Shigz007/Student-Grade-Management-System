@@ -1,0 +1,86 @@
+.pb-hover {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: auto;
+}
+.pb {
+  background: #f1f3f5;
+  border-top: 1px solid #d1d5db;
+  padding: 14px 24px;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d2 transparent;
+  opacity: 1;
+  transform: translateY(0);
+}
+.pb::-webkit-scrollbar {
+  height: 3px;
+}
+.pb::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pb::-webkit-scrollbar-thumb {
+  background: #d4d4d2;
+  border-radius: 2px;
+}
+
+.pb-chapter {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #64748b;
+  padding: 8px 16px;
+  border-radius: 0;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 180ms, border-color 180ms;
+}
+.pb-chapter:hover {
+  color: #0a1f3d;
+}
+.pb-active {
+  color: #0a1f3d;
+  border-color: #002fa7;
+}
+.pb-num {
+  color: #002fa7;
+  font-weight: 600;
+}
+
+.pb-pips {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+.pb-pip {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d4d4d2;
+  cursor: pointer;
+  transition: background 180ms;
+}
+.pb-pip-on {
+  background: #002fa7;
+}
+
+.pb-github {
+  display: none;
+}

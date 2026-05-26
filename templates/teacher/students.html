@@ -114,7 +114,7 @@ $(function() {
         if (!data.major_code) { $('#err-major').text('请选择专业'); ok = false; }
         if (!data.phone) { $('#err-phone').text('请输入电话'); ok = false; }
         if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
-        if (id) { api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); }); }
+        if (id) { api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); showToast('修改成功', 'success'); }); }
         else { api.addStudent(data).then(function(res) { $('#student-modal').modal('hide'); loadStudents(); showToast(res.message, 'success'); }); }
     });
 

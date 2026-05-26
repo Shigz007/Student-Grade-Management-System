@@ -90,14 +90,15 @@ $(function() {
         if (!changingName && !changingPw) { $('#profile-modal').modal('hide'); return; }
 
         var ok = true;
+        var errors = [];
         if (changingPw) {
-            if (!oldPw) { $('#err-old-pw').text('请输入原密码'); ok = false; }
-            if (!newPw) { $('#err-new-pw').text('请输入新密码'); ok = false; }
-            if (!confirmPw) { $('#err-confirm-pw').text('请确认新密码'); ok = false; }
-            if (newPw && newPw.length < 6) { $('#err-new-pw').text('新密码至少6位'); ok = false; }
+            if (!oldPw) { $('#err-old-pw').text('请输入原密码'); errors.push('请输入原密码'); ok = false; }
+            if (!newPw) { $('#err-new-pw').text('请输入新密码'); errors.push('请输入新密码'); ok = false; }
+            if (!confirmPw) { $('#err-confirm-pw').text('请确认新密码'); errors.push('请确认新密码'); ok = false; }
+            if (newPw && newPw.length < 6) { $('#err-new-pw').text('新密码至少6位'); errors.push('新密码至少6位'); ok = false; }
             if (newPw && confirmPw && newPw !== confirmPw) { $('#err-confirm-pw').text('两次密码不一致'); showToast('两次密码不一致', 'danger'); return; }
         }
-        if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
+        if (!ok) { showToast(errors.join('；'), 'warning'); return; }
 
         var promises = [];
         var msgs = [];

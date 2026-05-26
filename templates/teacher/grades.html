@@ -58,7 +58,7 @@
     <div class="card-body p-0">
         <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>学号</th><th>学生</th><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>时间</th><th>操作</th></tr></thead>
+            <thead><tr><th>学号</th><th>学生</th><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>操作</th></tr></thead>
             <tbody id="grade-table"></tbody>
         </table>
         </div>
@@ -160,14 +160,17 @@ $(function() {
                 $('#form-student-search').val(g.student_no + ' ' + g.student_name);
                 $('#form-grade-college').val(collegeNames[g.college_code] || g.college_code || '');
                 $('#form-score').val(g.score);
-                $('#form-year').val(g.semester_year || ''); $('#form-term').val(g.semester_term || '');
+                $('#form-term').val(g.semester_term || '');
                 var editStudent = allStudents.find(function(s) { return s.id == g.student_id; });
                 if (editStudent) {
                     var majorName = majorNames[editStudent.college_code + '_' + editStudent.major_code] || editStudent.major_code || '';
                     $('#form-grade-major').val(majorName);
                     populateFormYears(editStudent.enrollment_year);
+                    $('#form-year').val(g.semester_year || '');
                     populateFormCourses(editStudent.college_code, editStudent.major_code, g.course_id);
                 } else {
+                    populateFormYears(new Date().getFullYear());
+                    $('#form-year').val(g.semester_year || '');
                     populateFormCourses(g.college_code || '', '', g.course_id);
                 }
                 $('.field-error').text('');
@@ -381,10 +384,10 @@ $(function() {
             var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
             html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td>';
             html += '<td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td>';
-            html += '<td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td>';
+            html += '<td><small>' + (sem || '-') + '</small></td>';
             html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
         });
-        $('#grade-table').html(html || '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+        $('#grade-table').html(html || '<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>');
         var end = Math.min(start + gradePageSize, total);
         $('#grade-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
         var phtml = '';

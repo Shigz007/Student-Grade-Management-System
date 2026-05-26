@@ -49,8 +49,8 @@
             <div class="card-header"><h6 class="heading h6 mb-0">最近录入的成绩</h6></div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead><tr><th>学生</th><th>课程</th><th>成绩</th><th>学期</th></tr></thead>
+                <table class="table table-hover mb-0 recent-table">
+                    <thead><tr><th style="width:25%">学生</th><th style="width:35%">课程</th><th style="width:15%">成绩</th><th style="width:25%">学期</th></tr></thead>
                     <tbody id="recent-grades"></tbody>
                 </table>
                 </div>
@@ -60,7 +60,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card z-depth-1">
             <div class="card-header"><h6 class="heading h6 mb-0">班级分布</h6></div>
-            <div class="card-body"><div id="class-distribution"></div></div>
+            <div class="card-body p-0"><div id="class-distribution" style="max-height:350px;overflow-y:auto;" class="px-3 py-2"></div></div>
         </div>
     </div>
 </div>
@@ -80,10 +80,11 @@ $(function() {
                 var cls = s.student_no ? s.student_no.substring(6,8) : '';
                 classes[majorName + cls || '未分班'] = (classes[majorName + cls || '未分班'] || 0) + 1;
             });
-            var html = '';
+            var html = '<div class="row">';
             Object.keys(classes).sort().forEach(function(c) {
-                html += '<div class="d-flex justify-content-between align-items-center mb-2"><span class="text-sm">' + c + '</span><span class="badge badge-primary">' + classes[c] + ' 人</span></div>';
+                html += '<div class="col-12 col-sm-6 col-md-4 col-lg-6 mb-1"><div class="d-flex justify-content-between align-items-center"><span class="text-sm">' + c + '</span><span class="badge badge-primary">' + classes[c] + '</span></div></div>';
             });
+            html += '</div>';
             $('#class-distribution').html(html || '<p class="text-muted text-center">暂无数据</p>');
         });
     });

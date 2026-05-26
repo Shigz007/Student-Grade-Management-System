@@ -1,21 +1,47 @@
 {% extends "teacher/base.html" %}
 {% block content %}
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">学生筛选</h6></div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 280px;">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索学号/姓名...">
+            </div>
+            <button class="btn btn-sm btn-primary mb-2" id="btn-add-student"><i class="fas fa-plus mr-1"></i>新增学生</button>
+        </div>
+    </div>
+</div>
+
 <div class="card z-depth-1">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h6 class="heading h6 mb-0">学生列表</h6>
         <div class="d-flex align-items-center">
-            <div class="input-group input-group-transparent mr-2" style="width: 220px;">
-                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
-                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索学号/姓名...">
-            </div>
-            <button class="btn btn-sm btn-primary" id="btn-add-student"><i class="fas fa-plus"></i> 新增学生</button>
+            <small class="text-muted mr-2">每页</small>
+            <select class="form-control form-control-sm" style="width:72px" id="student-page-size">
+                <option value="10">10</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+            </select>
+            <small class="text-muted ml-2">条</small>
         </div>
     </div>
     <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead><tr><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>电话</th><th>操作</th></tr></thead>
             <tbody id="student-table"></tbody>
         </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap px-3 py-2 border-top">
+            <small class="text-muted mb-1" id="student-page-info"></small>
+            <div class="d-flex align-items-center mx-2 mb-1">
+                <small class="text-muted mr-1">跳至</small>
+                <input type="text" class="form-control form-control-sm page-jump-input" id="student-jump-page">
+                <small class="text-muted ml-1">页</small>
+            </div>
+            <nav><ul class="pagination pagination-sm mb-0 flex-wrap" id="student-pagination"></ul></nav>
+        </div>
     </div>
 </div>
 
@@ -130,17 +156,74 @@ $(function() {
         });
     }
 
+    var allStudentsData = []; var studentPage = 1; var studentPageSize = 10;
+
     function loadStudents() {
         var search = $('#search-input').val().trim();
         api.getStudents(search ? { search: search } : {}).then(function(students) {
-            var html = '';
-            students.forEach(function(s) {
-                html += '<tr><td>' + s.student_no + '</td><td>' + s.name + '</td><td>' + (s.gender || '-') + '</td><td>' + (s.student_no ? s.student_no.substring(6,8) : '-') + '</td><td>' + (s.phone || '-') + '</td>';
-                html += '<td><button class="btn btn-sm btn-success btn-action btn-edit" data-id="' + s.id + '"><i class="fas fa-edit"></i></button></td></tr>';
-            });
-            $('#student-table').html(html || '<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>');
+            allStudentsData = students;
+            studentPage = 1;
+            renderStudentsPage();
         });
     }
+
+    function renderStudentsPage() {
+        var total = allStudentsData.length;
+        var totalPages = Math.ceil(total / studentPageSize) || 1;
+        if (studentPage > totalPages) studentPage = totalPages;
+        var start = (studentPage - 1) * studentPageSize;
+        var pageData = allStudentsData.slice(start, start + studentPageSize);
+        var html = '';
+        pageData.forEach(function(s) {
+            html += '<tr><td>' + s.student_no + '</td><td>' + s.name + '</td><td>' + (s.gender || '-') + '</td><td>' + (s.student_no ? s.student_no.substring(6,8) : '-') + '</td><td>' + (s.phone || '-') + '</td>';
+            html += '<td><button class="btn btn-sm btn-success btn-action btn-edit" data-id="' + s.id + '"><i class="fas fa-pencil-alt"></i></button></td></tr>';
+        });
+        $('#student-table').html(html || '<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>');
+        var end = Math.min(start + studentPageSize, total);
+        $('#student-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
+        var phtml = '';
+        phtml += '<li class="page-item ' + (studentPage <= 1 ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (studentPage - 1) + '">上一页</a></li>';
+        var pages = []; var maxVisible = 5;
+        var sp = Math.max(1, studentPage - Math.floor(maxVisible / 2));
+        var ep = Math.min(totalPages, sp + maxVisible - 1);
+        if (ep - sp < maxVisible - 1) sp = Math.max(1, ep - maxVisible + 1);
+        if (sp > 1) { pages.push(1); if (sp > 2) pages.push('...'); }
+        for (var i = sp; i <= ep; i++) pages.push(i);
+        if (ep < totalPages) { if (ep < totalPages - 1) pages.push('...'); pages.push(totalPages); }
+        pages.forEach(function(p) {
+            if (p === '...') { phtml += '<li class="page-item disabled"><span class="page-link">...</span></li>'; }
+            else { phtml += '<li class="page-item ' + (p === studentPage ? 'active' : '') + '"><a class="page-link" href="#" data-page="' + p + '">' + p + '</a></li>'; }
+        });
+        phtml += '<li class="page-item ' + (studentPage >= totalPages ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (studentPage + 1) + '">下一页</a></li>';
+        $('#student-pagination').html(phtml);
+    }
+
+    $('#student-page-size').on('change', function() {
+        studentPageSize = parseInt($(this).val());
+        studentPage = 1;
+        renderStudentsPage();
+    });
+
+    $(document).on('click', '#student-pagination .page-link', function(e) {
+        e.preventDefault();
+        var p = parseInt($(this).data('page'));
+        var totalPages = Math.ceil(allStudentsData.length / studentPageSize) || 1;
+        if (p >= 1 && p <= totalPages) { studentPage = p; renderStudentsPage(); }
+    });
+
+    $('#student-jump-page').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        var totalPages = Math.ceil(allStudentsData.length / studentPageSize) || 1;
+        var v = parseInt(this.value);
+        if (v > totalPages) this.value = totalPages;
+    }).on('keypress', function(e) {
+        if (e.which === 13) {
+            var totalPages = Math.ceil(allStudentsData.length / studentPageSize) || 1;
+            var p = parseInt($(this).val()) || 1;
+            if (p >= 1 && p <= totalPages) { studentPage = p; renderStudentsPage(); }
+            $(this).val('');
+        }
+    });
 });
 </script>
 {% endblock %}

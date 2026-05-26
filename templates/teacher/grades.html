@@ -3,34 +3,70 @@
 <div class="card z-depth-1 mb-4">
     <div class="card-header"><h6 class="heading h6 mb-0">成绩筛选</h6></div>
     <div class="card-body">
-        <div class="d-flex align-items-center flex-wrap">
-            <button class="btn btn-sm btn-outline-secondary mr-2 mb-2" type="button" data-toggle="collapse" data-target="#advanced-filters" id="btn-toggle-filters">
-                <i class="fas fa-sliders-h"></i> 筛选 <i class="fas fa-caret-down"></i>
-            </button>
-            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 300px;">
-                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
-                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索学生、课程、学院、学期...">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex justify-content-between align-items-center flex-grow-1 mr-3" style="min-width: 0;">
+                <button class="btn btn-sm btn-outline-secondary mr-2 flex-shrink-0 mb-2" type="button" data-toggle="collapse" data-target="#advanced-filters" id="btn-toggle-filters">
+                    <i class="fas fa-sliders-h mr-1"></i>筛选 <i class="fas fa-caret-down"></i>
+                </button>
+                <div class="input-group input-group-transparent flex-grow-1 mb-2" style="max-width: 360px;">
+                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                    <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索学生、课程、学院、学期...">
+                </div>
             </div>
-            <button class="btn btn-sm btn-success mb-2" id="btn-add-grade"><i class="fas fa-plus"></i> 录入成绩</button>
+            <button class="btn btn-sm btn-success mb-2" id="btn-add-grade"><i class="fas fa-plus mr-1"></i>录入成绩</button>
         </div>
         <div class="collapse mt-3" id="advanced-filters">
             <div class="row">
-                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select></div>
-                <div class="col-md-3 mb-2"><select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select></div>
-                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select></div>
-                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-control-label small text-muted">学院</label>
+                    <select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-control-label small text-muted">课程</label>
+                    <select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-control-label small text-muted">年份</label>
+                    <select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-control-label small text-muted">学期</label>
+                    <select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="card z-depth-1">
-    <div class="card-header"><h6 class="heading h6 mb-0">成绩列表</h6></div>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="heading h6 mb-0">成绩列表</h6>
+        <div class="d-flex align-items-center">
+            <small class="text-muted mr-2">每页</small>
+            <select class="form-control form-control-sm" style="width:72px" id="grade-page-size">
+                <option value="10">10</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+            </select>
+            <small class="text-muted ml-2">条</small>
+        </div>
+    </div>
     <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead><tr><th>学号</th><th>学生</th><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>时间</th><th>操作</th></tr></thead>
             <tbody id="grade-table"></tbody>
         </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap px-3 py-2 border-top">
+            <small class="text-muted mb-1" id="grade-page-info"></small>
+            <div class="d-flex align-items-center mx-2 mb-1">
+                <small class="text-muted mr-1">跳至</small>
+                <input type="text" class="form-control form-control-sm page-jump-input" id="grade-jump-page">
+                <small class="text-muted ml-1">页</small>
+            </div>
+            <nav><ul class="pagination pagination-sm mb-0 flex-wrap" id="grade-pagination"></ul></nav>
+        </div>
     </div>
 </div>
 
@@ -181,6 +217,7 @@ $(function() {
     }
 
     var allStudents = []; var collegeNames = {}; var confirmedStudentId = null; var confirmedStudentText = '';
+    var allGrades = []; var gradePage = 1; var gradePageSize = 10;
 
     function loadStudentsDropdown() {
         api.getStudents({}).then(function(students) {
@@ -244,18 +281,73 @@ $(function() {
         var year = $('#filter-year').val(); if (year) params.semester_year = year;
         var term = $('#filter-term').val(); if (term) params.semester_term = term;
         api.getGrades(params).then(function(grades) {
-            var html = '';
-            grades.forEach(function(g) {
-                var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
-                var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
-                html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td>';
-                html += '<td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td>';
-                html += '<td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td>';
-                html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash"></i></button></td></tr>';
-            });
-            $('#grade-table').html(html || '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+            allGrades = grades;
+            gradePage = 1;
+            renderGradesPage();
         });
     }
+
+    function renderGradesPage() {
+        var total = allGrades.length;
+        var totalPages = Math.ceil(total / gradePageSize) || 1;
+        if (gradePage > totalPages) gradePage = totalPages;
+        var start = (gradePage - 1) * gradePageSize;
+        var pageGrades = allGrades.slice(start, start + gradePageSize);
+        var html = '';
+        pageGrades.forEach(function(g) {
+            var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
+            var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
+            html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td>';
+            html += '<td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td>';
+            html += '<td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td>';
+            html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
+        });
+        $('#grade-table').html(html || '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+        var end = Math.min(start + gradePageSize, total);
+        $('#grade-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
+        var phtml = '';
+        phtml += '<li class="page-item ' + (gradePage <= 1 ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (gradePage - 1) + '">上一页</a></li>';
+        var pages = []; var maxVisible = 5;
+        var sp = Math.max(1, gradePage - Math.floor(maxVisible / 2));
+        var ep = Math.min(totalPages, sp + maxVisible - 1);
+        if (ep - sp < maxVisible - 1) sp = Math.max(1, ep - maxVisible + 1);
+        if (sp > 1) { pages.push(1); if (sp > 2) pages.push('...'); }
+        for (var i = sp; i <= ep; i++) pages.push(i);
+        if (ep < totalPages) { if (ep < totalPages - 1) pages.push('...'); pages.push(totalPages); }
+        pages.forEach(function(p) {
+            if (p === '...') { phtml += '<li class="page-item disabled"><span class="page-link">...</span></li>'; }
+            else { phtml += '<li class="page-item ' + (p === gradePage ? 'active' : '') + '"><a class="page-link" href="#" data-page="' + p + '">' + p + '</a></li>'; }
+        });
+        phtml += '<li class="page-item ' + (gradePage >= totalPages ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (gradePage + 1) + '">下一页</a></li>';
+        $('#grade-pagination').html(phtml);
+    }
+
+    $('#grade-page-size').on('change', function() {
+        gradePageSize = parseInt($(this).val());
+        gradePage = 1;
+        renderGradesPage();
+    });
+
+    $(document).on('click', '#grade-pagination .page-link', function(e) {
+        e.preventDefault();
+        var p = parseInt($(this).data('page'));
+        var totalPages = Math.ceil(allGrades.length / gradePageSize) || 1;
+        if (p >= 1 && p <= totalPages) { gradePage = p; renderGradesPage(); }
+    });
+
+    $('#grade-jump-page').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        var totalPages = Math.ceil(allGrades.length / gradePageSize) || 1;
+        var v = parseInt(this.value);
+        if (v > totalPages) this.value = totalPages;
+    }).on('keypress', function(e) {
+        if (e.which === 13) {
+            var totalPages = Math.ceil(allGrades.length / gradePageSize) || 1;
+            var p = parseInt($(this).val()) || 1;
+            if (p >= 1 && p <= totalPages) { gradePage = p; renderGradesPage(); }
+            $(this).val('');
+        }
+    });
 });
 </script>
 {% endblock %}

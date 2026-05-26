@@ -19,17 +19,22 @@ function checkAuth() {
     }
 
     // Show username with icon hint
-    $('#user-display').html('<i class="fas fa-user-circle mr-1"></i>' + user.username + ' <i class="fas fa-pencil-alt" style="font-size:0.7rem;opacity:0.5;"></i>');
+    var userHtml = '<i class="fas fa-user-circle mr-1"></i>' + user.username + ' <i class="fas fa-pencil-alt" style="font-size:0.7rem;opacity:0.5;"></i>';
+    $('#user-display').html(userHtml);
+    $('#sidebar-user-display').html(userHtml);
 
     // Profile click handler
-    $('#user-display').off('click').on('click', function(e) {
+    function openProfile(e) {
         e.preventDefault();
         var u = JSON.parse(localStorage.getItem('user') || '{}');
         $('#profile-username').val(u.username);
         $('#profile-role').val(u.role === 'admin' ? '管理员' : u.role === 'teacher' ? '教师' : '学生');
         $('#profile-old-pw, #profile-new-pw, #profile-confirm-pw').val('');
+        $('#profile-modal .field-error').text('');
         $('#profile-modal').modal('show');
-    });
+    }
+    $('#user-display').off('click').on('click', openProfile);
+    $('#sidebar-user-display').off('click').on('click', openProfile);
 
     // Highlight active nav
     $('.navigation-link').removeClass('active');
@@ -61,18 +66,23 @@ $(function() {
         var newPw = $('#profile-new-pw').val();
         var confirmPw = $('#profile-confirm-pw').val();
 
-        if (!newName) { alert('用户名不能为空'); return; }
-
         var changingPw = oldPw || newPw || confirmPw;
         var changingName = newName !== user.username;
 
-        if (!changingName && !changingPw) { alert('没有修改任何内容'); return; }
+        $('#profile-modal .field-error').text('');
 
+        if (!newName) { $('#err-username').text('请输入用户名'); return; }
+        if (!changingName && !changingPw) { $('#err-username').text('没有修改任何内容'); return; }
+
+        var ok = true;
         if (changingPw) {
-            if (!oldPw || !newPw || !confirmPw) { alert('请填写所有密码字段'); return; }
-            if (newPw.length < 6) { alert('新密码长度不能少于6位'); return; }
-            if (newPw !== confirmPw) { alert('两次输入的新密码不一致'); return; }
+            if (!oldPw) { $('#err-old-pw').text('请输入原密码'); ok = false; }
+            if (!newPw) { $('#err-new-pw').text('请输入新密码'); ok = false; }
+            if (!confirmPw) { $('#err-confirm-pw').text('请确认新密码'); ok = false; }
+            if (newPw && newPw.length < 6) { $('#err-new-pw').text('新密码至少6位'); ok = false; }
+            if (newPw && confirmPw && newPw !== confirmPw) { $('#err-confirm-pw').text('两次密码不一致'); ok = false; }
         }
+        if (!ok) return;
 
         var promises = [];
         var msgs = [];
@@ -82,7 +92,8 @@ $(function() {
                 msgs.push(res.message);
                 user.username = newName;
                 localStorage.setItem('user', JSON.stringify(user));
-                $('#user-display').html('<i class="fas fa-user-circle mr-1"></i>' + newName + ' <i class="fas fa-pencil-alt" style="font-size:0.7rem;opacity:0.5;"></i>');
+                var newHtml = '<i class="fas fa-user-circle mr-1"></i>' + newName + ' <i class="fas fa-pencil-alt" style="font-size:0.7rem;opacity:0.5;"></i>';
+                $('#user-display, #sidebar-user-display').html(newHtml);
             }));
         }
 

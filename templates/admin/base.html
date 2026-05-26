@@ -22,7 +22,14 @@
             position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-width);
             background: #1e1e2d; z-index: 1050; overflow-y: auto;
             transition: transform 0.3s ease;
+            display: flex; flex-direction: column;
         }
+        .sidebar-bottom { display: none; padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .sidebar-bottom .sidebar-user-link { color: #a2a3b7; text-decoration: none; font-size: 0.85rem; cursor: pointer; }
+        .sidebar-bottom .sidebar-user-link:hover { color: #fff; text-decoration: none; }
+        .sidebar-badge-group, .sidebar-logout-group { display: none; }
+        .modal-header .close { font-size: 1.8rem; font-weight: 300; color: #525f7f; opacity: 0.7; text-shadow: none; padding: 0; margin: 0; line-height: 1; height: 1.8rem; display: flex; align-items: center; justify-content: center; }
+        .modal-header .close:hover { opacity: 1; color: #000; }
         .sidebar .sidebar-brand { padding: 20px 24px; }
         .sidebar .sidebar-brand a { color: #fff; font-size: 1.15rem; text-decoration: none; font-weight: 600; }
         .sidebar .nav-section { padding: 16px 24px 8px; color: #6c6d85; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
@@ -34,8 +41,8 @@
         .sidebar .navigation-link:hover, .sidebar .navigation-link.active { color: #fff; background: rgba(255,255,255,0.06); }
         .sidebar .navigation-link i { width: 22px; margin-right: 10px; text-align: center; }
 
-        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: #f5f5f9; }
-        .topbar { background: #fff; height: var(--topbar-height); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e8e8ef; }
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; background: #f5f5f9; overflow-x: hidden; padding-top: var(--topbar-height); }
+        .topbar { position: fixed; top: 0; left: var(--sidebar-width); right: 0; height: var(--topbar-height); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e8e8ef; background: #fff; z-index: 1030; }
         .page-body { padding: 24px; }
 
         .stat-card { border-radius: 10px; border: none; transition: transform 0.2s, box-shadow 0.2s; }
@@ -43,19 +50,56 @@
         .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
         .stat-card .stat-label { font-size: 0.85rem; opacity: 0.85; }
 
-        .btn-action { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
+        .btn-action { padding: 5px 12px; font-size: 0.8rem; border-radius: 4px; margin-right: 6px; margin-bottom: 4px; }
+        .btn-action:last-child { margin-right: 0; }
+        .btn:focus, .btn.focus, a:focus, button:focus { outline: 0 !important; box-shadow: 0 0 0 2px rgba(108,117,125,0.35) !important; }
+        .btn:active, .btn.active { box-shadow: inset 0 2px 3px rgba(0,0,0,0.12) !important; }
+        .table td, .table th { padding: 0.85rem 1rem; white-space: nowrap; vertical-align: middle; }
         .table th { border-top: none; font-size: 0.78rem; text-transform: uppercase; color: #8898aa; font-weight: 600; letter-spacing: 0.5px; }
 
         .menu-toggle { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #525f7f; padding: 0 8px; }
         .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1040; }
         body.sidebar-open .sidebar-overlay { display: block; }
 
+        .table-responsive {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            background:
+                linear-gradient(to right, #fff 30%, rgba(255,255,255,0)),
+                linear-gradient(to left, #fff 30%, rgba(255,255,255,0)) 100% 0,
+                radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,.12), rgba(0,0,0,0)),
+                radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.12), rgba(0,0,0,0)) 100% 0;
+            background-repeat: no-repeat;
+            background-size: 30px 100%, 30px 100%, 10px 100%, 10px 100%;
+            background-attachment: local, local, scroll, scroll;
+        }
+        .page-jump-input { width: 42px; text-align: center; padding: 4px 2px; height: 34px; -moz-appearance: textfield; }
+        .page-jump-input::-webkit-inner-spin-button, .page-jump-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
         @media (max-width: 1199px) {
             .menu-toggle { display: inline-block; }
             .main-content { margin-left: 0; }
+            .topbar { left: 0; }
             .sidebar { transform: translateX(-100%); }
             .sidebar.toggled { transform: translateX(0); }
             body.sidebar-open { overflow: hidden; }
+        }
+        @media (max-width: 409px) {
+            .role-badge { display: none !important; }
+            .sidebar-bottom { display: block; }
+            .sidebar-badge-group { display: block; }
+        }
+        @media (max-width: 359px) {
+            .user-info { display: none !important; }
+        }
+        @media (max-width: 269px) {
+            .logout-btn { display: none !important; }
+            .sidebar-logout-group { display: block; }
+        }
+        @media (max-width: 767px) {
+            .table td, .table th { padding: 0.45rem 0.5rem; font-size: 0.78rem; }
+            .stat-card .stat-value { font-size: 1.4rem; }
+            .page-body { padding: 12px; }
         }
     </style>
 </head>
@@ -71,6 +115,15 @@
             <li><a class="navigation-link" href="/admin/students" id="nav-students"><i class="fas fa-user-graduate"></i> 学生管理</a></li>
             <li><a class="navigation-link" href="/admin/grades" id="nav-grades"><i class="fas fa-clipboard-list"></i> 成绩管理</a></li>
         </ul>
+        <div class="sidebar-bottom mt-auto">
+            <div class="sidebar-badge-group">
+                <span class="badge badge-danger mb-2">管理员</span>
+                <a href="#" class="sidebar-user-link d-block" id="sidebar-user-display" title="点击修改个人资料"></a>
+            </div>
+            <div class="sidebar-logout-group mt-2">
+                <button class="btn btn-sm btn-outline-danger btn-block" onclick="logout()"><i class="fas fa-sign-out-alt mr-1"></i>退出</button>
+            </div>
+        </div>
     </aside>
 
     <div class="main-content">
@@ -80,9 +133,9 @@
                 <h5 class="heading h5 mb-0" id="page-title">仪表盘</h5>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge badge-danger mr-3">管理员</span>
-                <a href="#" id="user-display" class="mr-3 text-dark" style="cursor:pointer;text-decoration:none;" title="点击修改个人资料"></a>
-                <button class="btn btn-sm btn-outline-danger" onclick="logout()"><i class="fas fa-sign-out-alt mr-1"></i>退出</button>
+                <span class="badge badge-danger mr-3 role-badge">管理员</span>
+                <a href="#" id="user-display" class="mr-3 text-dark user-info" style="cursor:pointer;text-decoration:none;" title="点击修改个人资料"></a>
+                <button class="btn btn-sm btn-outline-danger logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt mr-1"></i>退出</button>
             </div>
         </div>
         <div class="page-body">
@@ -98,12 +151,13 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group"><label class="form-control-label small">用户名</label><input type="text" class="form-control form-control-sm" id="profile-username"></div>
-                    <div class="form-group"><label class="form-control-label small">角色</label><input type="text" class="form-control form-control-sm" id="profile-role" readonly></div>
+                    <div class="form-group"><label class="form-control-label">用户名 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-username"></small></label><input type="text" class="form-control form-control-sm" id="profile-username"></div>
+                    <div class="form-group"><label class="form-control-label">角色</label><input type="text" class="form-control form-control-sm" id="profile-role" readonly></div>
                     <hr>
-                    <div class="form-group"><label class="form-control-label small">原密码</label><input type="password" class="form-control form-control-sm" id="profile-old-pw" placeholder="输入原密码"></div>
-                    <div class="form-group"><label class="form-control-label small">新密码</label><input type="password" class="form-control form-control-sm" id="profile-new-pw" placeholder="至少6位"></div>
-                    <div class="form-group"><label class="form-control-label small">确认新密码</label><input type="password" class="form-control form-control-sm" id="profile-confirm-pw" placeholder="再次输入新密码"></div>
+                    <h6 class="heading h6 text-muted mb-3"><i class="fas fa-key mr-1"></i>修改密码（选填）</h6>
+                    <div class="form-group"><label class="form-control-label">原密码 <span class="text-danger pw-req">*</span> <small class="text-danger field-error" id="err-old-pw"></small></label><input type="password" class="form-control form-control-sm" id="profile-old-pw" placeholder="输入原密码"></div>
+                    <div class="form-group"><label class="form-control-label">新密码 <span class="text-danger pw-req">*</span> <small class="text-danger field-error" id="err-new-pw"></small></label><input type="password" class="form-control form-control-sm" id="profile-new-pw" placeholder="至少6位"></div>
+                    <div class="form-group"><label class="form-control-label">确认新密码 <span class="text-danger pw-req">*</span> <small class="text-danger field-error" id="err-confirm-pw"></small></label><input type="password" class="form-control form-control-sm" id="profile-confirm-pw" placeholder="再次输入新密码"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">取消</button>
@@ -113,6 +167,7 @@
         </div>
     </div>
 
-    <script src="/assets/vendor/fontawesome/js/fontawesome-all.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/v4-shims.min.css">
 </body>
 </html>

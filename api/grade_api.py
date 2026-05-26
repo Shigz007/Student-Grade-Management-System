@@ -13,6 +13,8 @@ def get_grades():
     semester_year = request.args.get('semester_year', '').strip()
     semester_term = request.args.get('semester_term', '').strip()
     course_id = request.args.get('course_id', '').strip()
+    college_code = request.args.get('college_code', '').strip()
+    major_code = request.args.get('major_code', '').strip()
     search = request.args.get('search', '').strip()
 
     where = []
@@ -45,6 +47,12 @@ def get_grades():
     if course_id:
         where.append("g.course_id = ?")
         args.append(int(course_id))
+    if college_code:
+        where.append("c.college_code = ?")
+        args.append(college_code)
+    if major_code:
+        where.append("c.major_code = ?")
+        args.append(major_code)
 
     sql = """
         SELECT g.*, s.name as student_name, s.student_no,

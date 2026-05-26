@@ -17,19 +17,23 @@
         </div>
         <div class="collapse mt-3" id="advanced-filters">
             <div class="row">
-                <div class="col-md-3 mb-2">
+                <div class="col-md mb-2">
                     <label class="form-control-label small text-muted">学院</label>
                     <select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select>
                 </div>
-                <div class="col-md-3 mb-2">
+                <div class="col-md mb-2">
+                    <label class="form-control-label small text-muted">专业</label>
+                    <select class="form-control form-control-sm" id="filter-major"><option value="">全部专业</option></select>
+                </div>
+                <div class="col-md mb-2">
                     <label class="form-control-label small text-muted">课程</label>
                     <select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select>
                 </div>
-                <div class="col-md-3 mb-2">
+                <div class="col-md mb-2">
                     <label class="form-control-label small text-muted">年份</label>
                     <select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select>
                 </div>
-                <div class="col-md-3 mb-2">
+                <div class="col-md mb-2">
                     <label class="form-control-label small text-muted">学期</label>
                     <select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select>
                 </div>
@@ -108,7 +112,7 @@ $(function() {
     loadGrades();
 
     $('#search-input').on('input', loadGrades);
-    $('#filter-year,#filter-term,#filter-course').on('change', loadGrades);
+    $('#filter-year,#filter-term,#filter-course,#filter-major').on('change', loadGrades);
     $('#advanced-filters').on('show.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-down').removeClass('fa-caret-down').addClass('fa-caret-up'); });
     $('#advanced-filters').on('hide.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-up').removeClass('fa-caret-up').addClass('fa-caret-down'); });
 
@@ -162,9 +166,9 @@ $(function() {
                     var majorName = majorNames[editStudent.college_code + '_' + editStudent.major_code] || editStudent.major_code || '';
                     $('#form-grade-major').val(majorName);
                     populateFormYears(editStudent.enrollment_year);
-                    populateFormCourses(editStudent.major_code, g.course_id);
+                    populateFormCourses(editStudent.college_code, editStudent.major_code, g.course_id);
                 } else {
-                    populateFormCourses(g.college_code || '', g.course_id);
+                    populateFormCourses(g.college_code || '', '', g.course_id);
                 }
                 $('.field-error').text('');
                 $('#grade-modal').modal('show');
@@ -177,18 +181,26 @@ $(function() {
         api.deleteGrade($(this).data('id')).then(function() { loadGrades(); });
     });
 
-    function populateFilterCourses(collegeCode) {
-        var params = collegeCode ? { college_code: collegeCode } : {};
+    function populateFilterCourses(collegeCode, majorCode, savedValue) {
+        var $course = $('#filter-course');
+        var params = {};
+        if (collegeCode) params.college_code = collegeCode;
+        if (majorCode) params.major_code = majorCode;
         api.getCourses(params).then(function(courses) {
             var html = '<option value="">全部课程</option>';
-            courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
-            $('#filter-course').html(html);
+            var exists = !savedValue;
+            courses.forEach(function(c) {
+                html += '<option value="' + c.id + '">' + c.name + '</option>';
+                if (String(c.id) === String(savedValue)) exists = true;
+            });
+            $course.html(html);
+            if (exists) $course.val(savedValue);
         });
     }
 
-    function populateFormCourses(majorCode, selectedCourseId) {
-        if (!majorCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
-        api.getCourses({ major_code: majorCode }).then(function(courses) {
+    function populateFormCourses(collegeCode, majorCode, selectedCourseId) {
+        if (!collegeCode || !majorCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
+        api.getCourses({ college_code: collegeCode, major_code: majorCode }).then(function(courses) {
             var html = '<option value="">请选择课程</option>';
             courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
             $('#form-grade-course').html(html).prop('disabled', false);
@@ -205,7 +217,42 @@ $(function() {
     }
 
     function initCollegeEvents() {
-        $('#filter-college').on('change', function() { populateFilterCourses($(this).val()); loadGrades(); });
+        $('#filter-college').on('change', function() {
+            var collegeCode = $(this).val();
+            var $major = $('#filter-major');
+            var savedMajorText = $major.find('option:selected').text();
+            var savedMajorVal = $major.val() || '';
+            var savedCourse = $('#filter-course').val() || '';
+            populateFilterMajors(collegeCode, savedMajorText, function() {
+                var actualMajor = $('#filter-major').val() || '';
+                var keepCourse = savedMajorVal && actualMajor ? savedCourse : '';
+                populateFilterCourses(collegeCode, actualMajor, keepCourse);
+                loadGrades();
+            });
+        });
+        $('#filter-major').on('change', function() {
+            var collegeCode = $('#filter-college').val();
+            var majorCode = $(this).val();
+            var savedCourse = $('#filter-course').val() || '';
+            populateFilterCourses(collegeCode, majorCode, savedCourse);
+            loadGrades();
+        });
+    }
+
+    function populateFilterMajors(collegeCode, savedText, callback) {
+        var $major = $('#filter-major');
+        var params = collegeCode ? { college_code: collegeCode } : {};
+        api.getMajors(params).then(function(majors) {
+            var html = '<option value="">全部专业</option>';
+            var matchCode = '';
+            majors.forEach(function(m) {
+                html += '<option value="' + m.code + '">' + m.name + '</option>';
+                if (savedText && m.name === savedText) matchCode = m.code;
+            });
+            $major.html(html);
+            $major.val(matchCode || '');
+            if (callback) callback();
+        });
     }
 
     function initFilters() {
@@ -213,6 +260,7 @@ $(function() {
             var filterHtml = '<option value="">全部学院</option>';
             colleges.forEach(function(c) { filterHtml += '<option value="' + c.code + '">' + c.name + '</option>'; collegeNames[c.code] = c.name; });
             $('#filter-college').html(filterHtml);
+            populateFilterMajors('');
             populateFilterCourses();
         });
         api.getMajors({}).then(function(majors) {
@@ -248,7 +296,7 @@ $(function() {
                 $('#form-grade-college').val(collegeNames[student.college_code] || student.college_code);
                 var majorName = majorNames[student.college_code + '_' + student.major_code] || student.major_code || '';
                 $('#form-grade-major').val(majorName);
-                if (student.major_code) { populateFormCourses(student.major_code); }
+                if (student.major_code) { populateFormCourses(student.college_code, student.major_code); }
                 populateFormYears(student.enrollment_year);
             }
         }
@@ -291,6 +339,8 @@ $(function() {
     function loadGrades() {
         var params = {};
         var search = $('#search-input').val().trim(); if (search) params.search = search;
+        var college = $('#filter-college').val(); if (college) params.college_code = college;
+        var major = $('#filter-major').val(); if (major) params.major_code = major;
         var cid = $('#filter-course').val(); if (cid) params.course_id = cid;
         var year = $('#filter-year').val(); if (year) params.semester_year = year;
         var term = $('#filter-term').val(); if (term) params.semester_term = term;

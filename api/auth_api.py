@@ -47,17 +47,17 @@ def update_profile():
     if existing:
         return jsonify({'error': '该用户名已被使用'}), 400
 
-    old_username = g.user['username']
-
     execute("UPDATE users SET username = ? WHERE id = ?",
             (new_name, g.user['user_id']))
 
-    # Sync student name if user is a student
+    # Sync student name via user_id
     if g.user['role'] == 'student':
-        execute("UPDATE students SET name = ? WHERE name = ?",
-                (new_name, old_username))
+        execute("UPDATE students SET name = ? WHERE user_id = ?",
+                (new_name, g.user['user_id']))
 
-    return jsonify({'message': '修改成功', 'username': new_name})
+    # Issue a fresh token with the updated username
+    new_token = create_token(g.user['user_id'], new_name, g.user['role'])
+    return jsonify({'message': '修改成功', 'username': new_name, 'token': new_token})
 
 
 @auth_bp.route('/api/me/password', methods=['PUT'])

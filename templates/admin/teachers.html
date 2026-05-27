@@ -180,9 +180,9 @@ $(function() {
         };
 
         if (userId) {
-            api.updateTeacher(userId, data).then(function() { $('#teacher-modal').modal('hide'); loadTeachers(); showToast('修改成功', 'success'); });
+            api.updateTeacher(userId, data).then(function() { $('#teacher-modal').modal('hide'); loadTeachers(); showToast('修改成功', 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '操作失败'; showToast(m, 'danger'); });
         } else {
-            api.addTeacher(data).then(function(res) { $('#teacher-modal').modal('hide'); loadTeachers(); showToast(res.message, 'success'); });
+            api.addTeacher(data).then(function(res) { $('#teacher-modal').modal('hide'); loadTeachers(); showToast(res.message, 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '操作失败'; showToast(m, 'danger'); });
         }
     });
 

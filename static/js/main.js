@@ -33,7 +33,8 @@ function checkAuth() {
         window.location.href = '/login';
         return false;
     }
-    var user = JSON.parse(localStorage.getItem('user') || '{}');
+    var user;
+    try { user = JSON.parse(localStorage.getItem('user') || '{}'); } catch(e) { user = {}; }
     if (!user.role) {
         window.location.href = '/login';
         return false;
@@ -59,6 +60,21 @@ function checkAuth() {
         $('#profile-username').val(u.username);
         $('#profile-role').val(u.role === 'admin' ? '管理员' : u.role === 'teacher' ? '教师' : '学生');
         $('#profile-old-pw, #profile-new-pw, #profile-confirm-pw').val('');
+        if (u.role === 'student') {
+            $('.student-fields').show();
+            api.getMyInfo().then(function(info) {
+                $('#profile-phone').val(info.phone || '');
+                $('#profile-email').val(info.email || '');
+                $('#profile-modal').data('student-id', info.id);
+                $('#profile-modal').data('orig-phone', info.phone || '');
+                $('#profile-modal').data('orig-email', info.email || '');
+            }).fail(function() {
+                $('#profile-phone, #profile-email').val('');
+            });
+        } else {
+            $('.student-fields').hide();
+            $('#profile-modal').removeData('student-id');
+        }
         $('#profile-modal').modal('show');
     }
     $('#user-display').off('click').on('click', openProfile);
@@ -103,7 +119,17 @@ $(function() {
         var changingPw = oldPw || newPw || confirmPw;
         var changingName = newName !== user.username;
 
-        if (!changingName && !changingPw) { showToast('保存成功', 'success'); $('#profile-modal').modal('hide'); return; }
+        var isStudent = user.role === 'student';
+        var phone = isStudent ? $('#profile-phone').val().trim() : '';
+        var email = isStudent ? $('#profile-email').val().trim() : '';
+        var studentId = isStudent ? $('#profile-modal').data('student-id') : null;
+        var origPhone = isStudent ? ($('#profile-modal').data('orig-phone') || '') : '';
+        var origEmail = isStudent ? ($('#profile-modal').data('orig-email') || '') : '';
+        var changingContact = isStudent && (phone !== origPhone || email !== origEmail);
+
+        if (isStudent && !phone) { showToast('手机号不能为空', 'warning'); return; }
+
+        if (!changingName && !changingPw && !changingContact) { showToast('保存成功', 'success'); $('#profile-modal').modal('hide'); return; }
         if (!newName) { showToast('用户名不能为空', 'warning'); return; }
 
         var ok = true;
@@ -125,6 +151,7 @@ $(function() {
                 msgs.push(res.message);
                 user.username = newName;
                 localStorage.setItem('user', JSON.stringify(user));
+                if (res.token) localStorage.setItem('token', res.token);
                 var newHtml = '<i class="fas fa-user-circle mr-1"></i>' + newName + ' <i class="fas fa-pencil-alt" style="font-size:0.7rem;opacity:0.5;"></i>';
                 $('#user-display, #sidebar-user-display').html(newHtml);
             }));
@@ -136,8 +163,14 @@ $(function() {
             }));
         }
 
+        if (changingContact && studentId) {
+            promises.push(api.updateStudent(studentId, { phone: phone, email: email }).then(function(res) {
+                msgs.push('联系方式已更新');
+            }));
+        }
+
         $.when.apply($, promises).then(function() {
-            showToast(msgs.join('；'), 'success');
+            showToast(msgs.join('；') || '保存成功', 'success');
             $('#profile-modal').modal('hide');
         }).fail(function(xhr) {
             var msg = (xhr.responseJSON && xhr.responseJSON.error) || '操作失败';

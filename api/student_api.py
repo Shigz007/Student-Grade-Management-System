@@ -15,7 +15,7 @@ def get_students():
     class_name = request.args.get('class_name', '').strip()
 
     if g.user['role'] == 'student':
-        students = query("SELECT * FROM students WHERE name = ?", (g.user['username'],))
+        students = query("SELECT * FROM students WHERE user_id = ?", (g.user['user_id'],))
     elif g.user['role'] == 'teacher':
         tcs = query("SELECT college_code, major_code, class_name FROM teacher_classes WHERE user_id = ?",
                     (g.user['user_id'],))
@@ -119,14 +119,14 @@ def get_next_student_no():
 def get_my_info():
     if g.user['role'] != 'student':
         return jsonify({'error': '仅学生可访问'}), 403
-    user = query("SELECT * FROM users WHERE id = ?", (g.user['user_id'],), one=True)
-    student = query("SELECT * FROM students WHERE name = ?", (user['username'],), one=True)
+    student = query("SELECT * FROM students WHERE user_id = ?", (g.user['user_id'],), one=True)
     if not student:
         return jsonify({'error': '学生信息不存在'}), 404
     cl = query("SELECT name FROM colleges WHERE code = ?", (student['college_code'],), one=True)
     mj = query("SELECT name FROM majors WHERE college_code = ? AND code = ?", (student['college_code'], student['major_code']), one=True)
-    class_name = student['student_no'][6:8] if student['student_no'] and len(student['student_no']) >= 8 else ''
+    class_name = student['class_name'] or (student['student_no'][6:8] if student['student_no'] and len(student['student_no']) >= 8 else '')
     return jsonify({
+        'id': student['id'],
         'student_no': student['student_no'],
         'name': student['name'],
         'gender': student['gender'],
@@ -175,17 +175,17 @@ def add_student():
     if existing_user:
         return jsonify({'error': '已存在同名账号，请使用不同的姓名'}), 400
 
+    uid = execute(
+        "INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
+        (name, generate_password_hash(DEFAULT_STUDENT_PASSWORD), 'student')
+    )
     sid = execute(
-        """INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email)
-           VALUES (?,?,?,?,?,?,?,?,?)""",
+        """INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email, user_id)
+           VALUES (?,?,?,?,?,?,?,?,?,?)""",
         (student_no, name, data.get('gender', ''),
          data.get('enrollment_year', ''), data.get('college_code', ''),
          data.get('major_code', ''), data.get('class_name', ''),
-         data.get('phone', ''), data.get('email', ''))
-    )
-    execute(
-        "INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
-        (name, generate_password_hash(DEFAULT_STUDENT_PASSWORD), 'student')
+         data.get('phone', ''), data.get('email', ''), uid)
     )
     return jsonify({
         'id': sid,
@@ -195,27 +195,37 @@ def add_student():
 
 
 @student_bp.route('/api/students/<int:sid>', methods=['PUT'])
-@teacher_or_admin
+@login_required
 def update_student(sid):
     data = request.get_json()
     student = query("SELECT * FROM students WHERE id = ?", (sid,), one=True)
     if not student:
         return jsonify({'error': '学生不存在'}), 404
 
-    execute(
-        """UPDATE students SET student_no=?, name=?, gender=?, enrollment_year=?,
-           college_code=?, major_code=?, class_name=?, phone=?, email=? WHERE id=?""",
-        (data.get('student_no', student['student_no']),
-         data.get('name', student['name']),
-         data.get('gender', student['gender']),
-         data.get('enrollment_year', student.get('enrollment_year', '')),
-         data.get('college_code', student.get('college_code', '')),
-         data.get('major_code', student.get('major_code', '')),
-         data.get('class_name', student.get('class_name', '')),
-         data.get('phone', student.get('phone', '')),
-         data.get('email', student.get('email', '')),
-         sid)
-    )
+    if g.user['role'] == 'student':
+        if student['user_id'] != g.user['user_id']:
+            return jsonify({'error': '权限不足'}), 403
+        execute("UPDATE students SET phone=?, email=? WHERE id=?",
+                (data.get('phone', student.get('phone', '')),
+                 data.get('email', student.get('email', '')),
+                 sid))
+    else:
+        if g.user['role'] not in ('admin', 'teacher'):
+            return jsonify({'error': '权限不足'}), 403
+        execute(
+            """UPDATE students SET student_no=?, name=?, gender=?, enrollment_year=?,
+               college_code=?, major_code=?, class_name=?, phone=?, email=? WHERE id=?""",
+            (data.get('student_no', student['student_no']),
+             data.get('name', student['name']),
+             data.get('gender', student['gender']),
+             data.get('enrollment_year', student.get('enrollment_year', '')),
+             data.get('college_code', student.get('college_code', '')),
+             data.get('major_code', student.get('major_code', '')),
+             data.get('class_name', student.get('class_name', '')),
+             data.get('phone', student.get('phone', '')),
+             data.get('email', student.get('email', '')),
+             sid)
+        )
     return jsonify({'message': '更新成功'})
 
 
@@ -225,8 +235,8 @@ def delete_student(sid):
     student = query("SELECT * FROM students WHERE id = ?", (sid,), one=True)
     if not student:
         return jsonify({'error': '学生不存在'}), 404
-    execute("DELETE FROM grades WHERE student_id = ?", (sid,))
-    execute("DELETE FROM users WHERE username = ? AND role = 'student'", (student['name'],))
+    if student['user_id']:
+        execute("DELETE FROM users WHERE id = ?", (student['user_id'],))
     execute("DELETE FROM students WHERE id = ?", (sid,))
     return jsonify({'message': '删除成功'})
 
@@ -266,7 +276,7 @@ def export_students():
     writer = csv.writer(output)
     writer.writerow(['学号', '姓名', '性别', '入学年份', '学院', '专业', '班级', '电话', '邮箱'])
     for r in rows:
-        cls = r['student_no'][6:8] if r['student_no'] and len(r['student_no']) >= 8 else ''
+        cls = r['class_name'] or (r['student_no'][6:8] if r['student_no'] and len(r['student_no']) >= 8 else '')
         writer.writerow([r['student_no'], r['name'], r['gender'], r['enrollment_year'],
                         r['college_name'], r['major_name'], cls, r['phone'], r['email']])
 

@@ -17,7 +17,19 @@ def _generate_password():
 @admin_required
 def get_teachers():
     search = request.args.get('search', '').strip()
-    users = query("SELECT id, username FROM users WHERE role = 'teacher' ORDER BY id DESC")
+    if search:
+        users = query(
+            """SELECT DISTINCT u.id, u.username FROM users u
+               LEFT JOIN teacher_classes tc ON u.id = tc.user_id
+               LEFT JOIN school.colleges cl ON tc.college_code = cl.code
+               LEFT JOIN school.majors m ON tc.college_code = m.college_code AND tc.major_code = m.code
+               WHERE u.role = 'teacher' AND (
+                   u.username LIKE ? OR cl.name LIKE ? OR m.name LIKE ?
+               ) ORDER BY u.id DESC""",
+            (f'%{search}%', f'%{search}%', f'%{search}%')
+        )
+    else:
+        users = query("SELECT id, username FROM users WHERE role = 'teacher' ORDER BY id DESC")
     result = []
     for u in users:
         classes = query(
@@ -28,9 +40,6 @@ def get_teachers():
                WHERE tc.user_id = ?""",
             (u['id'],)
         )
-        if search and search not in u['username']:
-            if not any(search in (c['college_name'] + c['major_name']) for c in classes):
-                continue
         result.append({
             'user_id': u['id'],
             'username': u['username'],

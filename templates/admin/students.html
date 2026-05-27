@@ -175,15 +175,20 @@ $('#student-modal').modal('show');
                 $('#edit-student-id').val(s.id);
                 $('#student-modal-title').text('编辑学生');
                 $('#form-enrollment-year').val(s.enrollment_year || '');
-                $('#form-college').val(s.college_code || '').trigger('change');
                 var targetMajor = s.major_code || '';
-                var checkMajor = setInterval(function() {
-                    if ($('#form-major option').length > 1) {
-                        clearInterval(checkMajor);
-                        $('#form-major').val(targetMajor).trigger('change');
-                    }
-                }, 50);
-                setTimeout(function() { clearInterval(checkMajor); }, 5000);
+                var targetCollege = s.college_code || '';
+                $('#form-college').val(targetCollege);
+                // Load majors then set value
+                var $major = $('#form-major');
+                if (targetCollege) {
+                    api.getMajors({college_code: targetCollege}).then(function(majors) {
+                        $major.prop('disabled', false).html('<option value="">请选择专业</option>');
+                        majors.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
+                        $major.val(targetMajor);
+                        // Refresh student_no based on selection
+                        if (targetMajor) refreshStudentNo();
+                    });
+                }
                 $('#form-student-no').val(s.student_no);
                 $('#form-class-seq').val(s.student_no.substring(6, 8));
                 $('#form-name').val(s.name);

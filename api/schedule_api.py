@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from auth import login_required, admin_required
 from db import query, execute
 
@@ -78,16 +78,29 @@ def save_schedules():
 @schedule_bp.route('/api/schedules/classes', methods=['GET'])
 @login_required
 def get_schedule_classes():
-    rows = query(
-        """SELECT DISTINCT s.college_code, cl.name AS college_name,
-                  s.major_code, m.name AS major_name,
-                  SUBSTR(s.student_no, 7, 2) AS class_name
-           FROM students s
-           JOIN school.colleges cl ON s.college_code = cl.code
-           JOIN school.majors m ON s.college_code = m.college_code AND s.major_code = m.code
-           WHERE s.student_no != '' AND LENGTH(s.student_no) >= 8
-           ORDER BY s.college_code, s.major_code, class_name"""
-    )
+    if g.user['role'] == 'teacher':
+        rows = query(
+            """SELECT DISTINCT tc.college_code, cl.name AS college_name,
+                      tc.major_code, m.name AS major_name,
+                      tc.class_name
+               FROM teacher_classes tc
+               JOIN school.colleges cl ON tc.college_code = cl.code
+               JOIN school.majors m ON tc.college_code = m.college_code AND tc.major_code = m.code
+               WHERE tc.user_id = ?
+               ORDER BY tc.college_code, tc.major_code, tc.class_name""",
+            (g.user['user_id'],)
+        )
+    else:
+        rows = query(
+            """SELECT DISTINCT s.college_code, cl.name AS college_name,
+                      s.major_code, m.name AS major_name,
+                      s.class_name
+               FROM students s
+               JOIN school.colleges cl ON s.college_code = cl.code
+               JOIN school.majors m ON s.college_code = m.college_code AND s.major_code = m.code
+               WHERE s.class_name != ''
+               ORDER BY s.college_code, s.major_code, s.class_name"""
+        )
     return jsonify([{
         'college_code': r['college_code'],
         'college_name': r['college_name'],

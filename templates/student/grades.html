@@ -3,21 +3,18 @@
 <div class="card z-depth-1 mb-4">
     <div class="card-header"><h6 class="heading h6 mb-0">成绩筛选</h6></div>
     <div class="card-body">
-        <div class="d-flex align-items-center flex-wrap">
-            <button class="btn btn-sm btn-outline-secondary mr-2 mb-2" type="button" data-toggle="collapse" data-target="#advanced-filters" id="btn-toggle-filters">
-                <i class="fas fa-sliders-h"></i> 筛选 <i class="fas fa-caret-down"></i>
-            </button>
-            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 300px;">
-                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
-                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索课程、学院、学期...">
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <div class="input-group input-group-transparent">
+                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                    <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索课程、学期...">
+                </div>
             </div>
-        </div>
-        <div class="collapse mt-3" id="advanced-filters">
-            <div class="row">
-                <div class="col-md-3 mb-2"><select class="form-control form-control-sm" id="filter-college"><option value="">全部学院</option></select></div>
-                <div class="col-md-4 mb-2"><select class="form-control form-control-sm" id="filter-course"><option value="">全部课程</option></select></div>
-                <div class="col-md-3 mb-2"><select class="form-control form-control-sm" id="filter-year"><option value="">全部年份</option></select></div>
-                <div class="col-md-2 mb-2"><select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
+            <div class="col-md-3 mb-2">
+                <select class="form-control form-control-sm" id="filter-year"><option value="">全部学年</option></select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <select class="form-control form-control-sm" id="filter-term"><option value="">全部学期</option><option value="一">第一学期</option><option value="二">第二学期</option></select>
             </div>
         </div>
     </div>
@@ -39,7 +36,7 @@
     <div class="card-body p-0">
         <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>课程</th><th>成绩</th><th>专业</th><th>学院</th><th>学期</th><th>时间</th></tr></thead>
+            <thead><tr><th>课程</th><th>成绩</th><th>专业</th><th>学院</th><th>学期</th></tr></thead>
             <tbody id="grade-table"></tbody>
         </table>
         </div>
@@ -56,70 +53,59 @@
 </div>
 
 <script>
-var collegeNames = {};
 var allGrades = []; var gradePage = 1; var gradePageSize = 10;
 
 $(function() {
     checkAuth();
-    initFilters();
-    loadGrades();
 
-    $('#search-input').on('input', loadGrades);
-    $('#filter-year,#filter-term,#filter-course').on('change', loadGrades);
-    $('#advanced-filters').on('show.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-down').removeClass('fa-caret-down').addClass('fa-caret-up'); });
-    $('#advanced-filters').on('hide.bs.collapse', function() { $('#btn-toggle-filters i.fa-caret-up').removeClass('fa-caret-up').addClass('fa-caret-down'); });
+    api.getGrades({}).then(function(grades) {
+        allGrades = grades;
+        initFilters(grades);
+        renderGradesPage();
+    });
 
-    $('#filter-college').on('change', function() { populateFilterCourses($(this).val()); loadGrades(); });
+    $('#search-input').on('input', function() { gradePage = 1; renderGradesPage(); });
+    $('#filter-year,#filter-term').on('change', function() { gradePage = 1; renderGradesPage(); });
 
-    function populateFilterCourses(collegeCode) {
-        var params = collegeCode ? { college_code: collegeCode } : {};
-        api.getCourses(params).then(function(courses) {
-            var html = '<option value="">全部课程</option>';
-            courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
-            $('#filter-course').html(html);
-        });
+    function initFilters(grades) {
+        var years = new Set();
+        grades.forEach(function(g) { if (g.semester_year) years.add(g.semester_year); });
+        var sortedYears = Array.from(years).sort();
+        var yHtml = '<option value="">全部学年</option>';
+        sortedYears.forEach(function(y) { yHtml += '<option value="' + y + '">' + y + '</option>'; });
+        $('#filter-year').html(yHtml);
     }
 
-    function initFilters() {
-        api.getColleges().then(function(colleges) {
-            var html = '<option value="">全部学院</option>';
-            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; collegeNames[c.code] = c.name; });
-            $('#filter-college').html(html);
-            populateFilterCourses();
-        });
-        api.getYears().then(function(years) {
-            var html = '<option value="">全部年份</option>';
-            years.forEach(function(y) { html += '<option value="' + y + '">' + y + '</option>'; });
-            $('#filter-year').html(html);
-        });
-    }
+    function getFilteredGrades() {
+        var search = $('#search-input').val().trim().toLowerCase();
+        var year = $('#filter-year').val();
+        var term = $('#filter-term').val();
 
-    function loadGrades() {
-        var params = {};
-        var search = $('#search-input').val().trim(); if (search) params.search = search;
-        var cid = $('#filter-course').val(); if (cid) params.course_id = cid;
-        var year = $('#filter-year').val(); if (year) params.semester_year = year;
-        var term = $('#filter-term').val(); if (term) params.semester_term = term;
-        api.getGrades(params).then(function(grades) {
-            allGrades = grades;
-            gradePage = 1;
-            renderGradesPage();
+        return allGrades.filter(function(g) {
+            if (year && g.semester_year !== year) return false;
+            if (term && g.semester_term !== term) return false;
+            if (search) {
+                var haystack = (g.course_name + g.college_name + g.major_name + (g.semester_year || '') + '第' + (g.semester_term || '') + '学期').toLowerCase();
+                if (haystack.indexOf(search) === -1) return false;
+            }
+            return true;
         });
     }
 
     function renderGradesPage() {
-        var total = allGrades.length;
+        var filtered = getFilteredGrades();
+        var total = filtered.length;
         var totalPages = Math.ceil(total / gradePageSize) || 1;
         if (gradePage > totalPages) gradePage = totalPages;
         var start = (gradePage - 1) * gradePageSize;
-        var pageGrades = allGrades.slice(start, start + gradePageSize);
+        var pageGrades = filtered.slice(start, start + gradePageSize);
         var html = '';
         pageGrades.forEach(function(g) {
             var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
             var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
-            html += '<tr><td>' + g.course_name + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td>' + (g.major_name || '') + '</td><td>' + (g.college_name || '') + '</td><td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td></tr>';
+            html += '<tr><td>' + g.course_name + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td>' + (g.major_name || '') + '</td><td>' + (g.college_name || '') + '</td><td><small>' + (sem || '-') + '</small></td></tr>';
         });
-        $('#grade-table').html(html || '<tr><td colspan="6" class="text-center text-muted">暂无成绩</td></tr>');
+        $('#grade-table').html(html || '<tr><td colspan="5" class="text-center text-muted">暂无成绩</td></tr>');
         var end = Math.min(start + gradePageSize, total);
         $('#grade-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
         var phtml = '';
@@ -148,18 +134,18 @@ $(function() {
     $(document).on('click', '#grade-pagination .page-link', function(e) {
         e.preventDefault();
         var p = parseInt($(this).data('page'));
-        var totalPages = Math.ceil(allGrades.length / gradePageSize) || 1;
+        var totalPages = Math.ceil(getFilteredGrades().length / gradePageSize) || 1;
         if (p >= 1 && p <= totalPages) { gradePage = p; renderGradesPage(); }
     });
 
     $('#grade-jump-page').on('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
-        var totalPages = Math.ceil(allGrades.length / gradePageSize) || 1;
+        var totalPages = Math.ceil(getFilteredGrades().length / gradePageSize) || 1;
         var v = parseInt(this.value);
         if (v > totalPages) this.value = totalPages;
     }).on('keypress', function(e) {
         if (e.which === 13) {
-            var totalPages = Math.ceil(allGrades.length / gradePageSize) || 1;
+            var totalPages = Math.ceil(getFilteredGrades().length / gradePageSize) || 1;
             var p = parseInt($(this).val()) || 1;
             if (p >= 1 && p <= totalPages) { gradePage = p; renderGradesPage(); }
             $(this).val('');

@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS students (
     class_name TEXT DEFAULT '',
     phone TEXT DEFAULT '',
     email TEXT DEFAULT '',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS grades (
@@ -28,7 +30,7 @@ CREATE TABLE IF NOT EXISTS grades (
     semester_year TEXT DEFAULT '',
     semester_term TEXT DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id)
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS teacher_classes (
@@ -38,7 +40,7 @@ CREATE TABLE IF NOT EXISTS teacher_classes (
     major_code TEXT NOT NULL,
     class_name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(user_id, college_code, major_code, class_name)
 );
 

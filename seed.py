@@ -393,10 +393,10 @@ college_majors = {
 student_records = []
 for college_code, majors in college_majors.items():
     for major_code in majors:
-        num_classes = random.randint(1, 3)
+        num_classes = 1
         for class_seq in range(1, num_classes + 1):
             cls = str(class_seq).zfill(2)
-            num_students = random.randint(8, 45)
+            num_students = random.randint(3, 5)
             for seq in range(1, num_students + 1):
                 student_no = f'24{college_code}{major_code}{cls}{str(seq).zfill(2)}'
                 name, gender = random_name()
@@ -408,15 +408,18 @@ random.shuffle(student_records)
 student_ids = []
 for s in student_records:
     if not query("SELECT id FROM students WHERE student_no = ?", (s[0],)):
+        cls_name = s[0][6:8] if len(s[0]) >= 8 else ''
+        if not query("SELECT id FROM users WHERE username = ?", (s[1],)):
+            uid = execute("INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
+                          (s[1], generate_password_hash('Ad112233'), 'student'))
+        else:
+            uid = query("SELECT id FROM users WHERE username = ?", (s[1],), one=True)['id']
         sid = execute(
-            "INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
-            (s[0], s[1], s[2], s[3], s[4], s[5], '', s[6], '')
+            "INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email, user_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (s[0], s[1], s[2], s[3], s[4], s[5], cls_name, s[6], '', uid)
         )
         student_ids.append(sid)
-        if not query("SELECT id FROM users WHERE username = ?", (s[1],)):
-            execute("INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
-                    (s[1], generate_password_hash('Ad112233'), 'student'))
     else:
         existing = query("SELECT id FROM students WHERE student_no = ?", (s[0],))
         student_ids.append(existing[0]['id'])
@@ -439,7 +442,7 @@ for student in student_rows:
     available = course_by_college.get(college, [])
     if not available:
         continue
-    num_courses = random.randint(3, min(6, len(available)))
+    num_courses = random.randint(2, min(4, len(available)))
     chosen = random.sample(available, num_courses)
     for course in chosen:
         if not query("SELECT id FROM grades WHERE student_id = ? AND course_id = ?",

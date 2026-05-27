@@ -178,42 +178,39 @@ $(function() {
         if (!data.semester_year) { missing.push('学年'); ok = false; }
         if (!data.semester_term) { missing.push('学期'); ok = false; }
         if (!ok) { showToast('请填写' + missing.join('、'), 'warning'); return; }
-        if (id) { api.updateGrade(id, data).then(function(res) { $('#grade-modal').modal('hide'); loadGrades(); showToast(res.message, 'success'); }); }
-        else { api.addGrade(data).then(function(res) { $('#grade-modal').modal('hide'); loadGrades(); showToast(res.message, 'success'); }); }
+        if (id) { api.updateGrade(id, data).then(function(res) { $('#grade-modal').modal('hide'); loadGrades(); showToast(res.message, 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '操作失败'; showToast(m, 'danger'); }); }
+        else { api.addGrade(data).then(function(res) { $('#grade-modal').modal('hide'); loadGrades(); showToast(res.message, 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '操作失败'; showToast(m, 'danger'); }); }
     });
 
     $(document).on('click', '.btn-edit-grade', function() {
         var id = $(this).data('id');
-        api.getGrades({}).then(function(grades) {
-            var g = grades.find(function(gr) { return gr.id === id; });
-            if (g) {
-                $('#edit-grade-id').val(g.id);
-                $('#grade-modal-title').text('编辑成绩');
-                $('#student-select-area').hide();
-                $('#form-grade-student-display').show().val(g.student_no + ' ' + g.student_name);
-                $('#form-grade-student').val(g.student_id);
-                $('#form-grade-college').val(collegeNames[g.college_code] || g.college_code || '');
-                $('#form-grade-course').html('<option value="' + g.course_id + '">' + (g.course_name || '') + '</option>').hide();
-                $('#form-grade-course-display').show().val(g.course_name || '');
-                $('.required-star').hide();
-                $('#form-score').val(g.score);
-                $('#form-year').prop('disabled', true).hide().val(g.semester_year || '');
-                $('#form-year-display').show().val(g.semester_year || '');
-                $('#form-term').prop('disabled', true).hide().val(g.semester_term || '');
-                $('#form-term-display').show().val(g.semester_term ? '第' + g.semester_term + '学期' : '');
-                var editStudent = allStudents.find(function(s) { return s.id == g.student_id; });
-                if (editStudent) {
-                    var majorName = majorNames[editStudent.college_code + '_' + editStudent.major_code] || editStudent.major_code || '';
-                    $('#form-grade-major').val(majorName);
-                    populateFormYears(editStudent.enrollment_year);
-                    $('#form-year').val(g.semester_year || '');
-                } else {
-                    populateFormYears(new Date().getFullYear());
-                    $('#form-year').val(g.semester_year || '');
-                }
-                $('#grade-modal').modal('show');
-            }
-        });
+        var g = allGrades.find(function(gr) { return gr.id === id; });
+        if (!g) return;
+        $('#edit-grade-id').val(g.id);
+        $('#grade-modal-title').text('编辑成绩');
+        $('#student-select-area').hide();
+        $('#form-grade-student-display').show().val(g.student_no + ' ' + g.student_name);
+        $('#form-grade-student').val(g.student_id);
+        $('#form-grade-college').val(collegeNames[g.college_code] || g.college_code || '');
+        $('#form-grade-course').html('<option value="' + g.course_id + '">' + (g.course_name || '') + '</option>').hide();
+        $('#form-grade-course-display').show().val(g.course_name || '');
+        $('.required-star').hide();
+        $('#form-score').val(g.score);
+        $('#form-year').prop('disabled', true).hide().val(g.semester_year || '');
+        $('#form-year-display').show().val(g.semester_year || '');
+        $('#form-term').prop('disabled', true).hide().val(g.semester_term || '');
+        $('#form-term-display').show().val(g.semester_term ? '第' + g.semester_term + '学期' : '');
+        var editStudent = allStudents.find(function(s) { return s.id == g.student_id; });
+        if (editStudent) {
+            var majorName = majorNames[editStudent.college_code + '_' + editStudent.major_code] || editStudent.major_code || '';
+            $('#form-grade-major').val(majorName);
+            populateFormYears(editStudent.enrollment_year);
+            $('#form-year').val(g.semester_year || '');
+        } else {
+            populateFormYears(new Date().getFullYear());
+            $('#form-year').val(g.semester_year || '');
+        }
+        $('#grade-modal').modal('show');
     });
 
     $(document).on('click', '.btn-delete-grade', function() {

@@ -18,6 +18,7 @@
         .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-width); background: #1e1e2d; z-index: 1050; overflow-y: auto; transition: transform 0.3s ease; border-right: 1px solid #16161f; }
         .sidebar .sidebar-brand { padding: 20px 24px; }
         .sidebar .sidebar-brand a { color: #fff; font-size: 1.15rem; text-decoration: none; font-weight: 600; white-space: nowrap; }
+        .sidebar .sidebar-brand a i { width: 22px; text-align: center; display: inline-block; }
         .sidebar .nav-section { padding: 16px 24px 8px; color: #6c6d85; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
         .sidebar .navigation { list-style: none; padding: 0; margin: 0; }
         .sidebar .navigation-link { display: block; padding: 12px 24px; margin-bottom: 4px; color: #a2a3b7; text-decoration: none; transition: all 0.15s; font-size: 0.9rem; white-space: nowrap; }
@@ -126,6 +127,10 @@
                 <div class="modal-body">
                     <div class="form-group"><label class="form-control-label">用户名 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="profile-username"></div>
                     <div class="form-group"><label class="form-control-label">角色</label><input type="text" class="form-control form-control-sm" id="profile-role" readonly></div>
+                    <div class="student-fields" style="display:none;">
+                        <div class="form-group"><label class="form-control-label">手机号 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="profile-phone"></div>
+                        <div class="form-group"><label class="form-control-label">邮箱</label><input type="text" class="form-control form-control-sm" id="profile-email"></div>
+                    </div>
                     <hr>
                     <h6 class="heading h6 text-muted mb-3"><i class="fas fa-key mr-1"></i>修改密码（选填）</h6>
                     <div class="form-group"><label class="form-control-label">原密码 <span class="text-danger pw-req">*</span></label><input type="password" class="form-control form-control-sm" id="profile-old-pw" placeholder="输入原密码"></div>

@@ -6,7 +6,7 @@ from api import register_blueprints
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=['http://localhost:5000', 'http://127.0.0.1:5000'])
 
 register_blueprints(app)
 

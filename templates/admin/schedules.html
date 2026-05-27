@@ -132,7 +132,7 @@ $(function() {
         api.getCourses({college_code: currentCollege}).then(function(courses) {
             allCourses = courses;
             var courseHtml = '<option value="">选择课程</option>';
-            courses.forEach(function(c) { courseHtml += '<option value="' + c.id + '">' + c.name + ' (' + c.code + ')</option>'; });
+            courses.forEach(function(c) { courseHtml += '<option value="' + c.id + '">' + c.name + '</option>'; });
             $('#edit-course').html(courseHtml);
 
             // Load existing schedule
@@ -140,7 +140,7 @@ $(function() {
                 scheduleData = {};
                 for (var d = 1; d <= 5; d++) { scheduleData[d] = {}; }
                 entries.forEach(function(e) {
-                    scheduleData[e.day_of_week][e.time_slot] = { course_id: e.course_id, course_name: e.course_name };
+                    scheduleData[e.day_of_week][e.time_slot] = { course_id: e.course_id, course_name: e.course_name, course_code: e.course_code };
                 });
                 renderGrid();
                 $('#schedule-card').show();

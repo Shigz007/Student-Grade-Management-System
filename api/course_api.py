@@ -64,11 +64,14 @@ def add_course():
 
     if not code:
         rows = query(
-            "SELECT code FROM courses WHERE college_code = ? AND major_code = ? ORDER BY CAST(code AS INTEGER) DESC LIMIT 1",
-            (college_code, major_code)
+            "SELECT code FROM courses WHERE college_code = ? ORDER BY CAST(SUBSTR(code, 3) AS INTEGER) DESC LIMIT 1",
+            (college_code,)
         )
-        max_num = int(rows[0]['code']) if rows else 0
-        code = str(max_num + 1).zfill(2)
+        if rows:
+            last_seq = int(rows[0]['code'][2:]) if len(rows[0]['code']) >= 4 else 0
+            code = college_code + str(last_seq + 1).zfill(2)
+        else:
+            code = college_code + '01'
 
     existing = query("SELECT id FROM courses WHERE college_code = ? AND major_code = ? AND code = ?",
                      (college_code, major_code, code))
@@ -126,6 +129,8 @@ def delete_course(cid):
         return jsonify({'error': '课程不存在'}), 404
     college_code = course['college_code']
     major_code = course['major_code']
+    execute("DELETE FROM grades WHERE course_id = ?", (cid,))
+    execute("DELETE FROM schedules WHERE course_id = ?", (cid,))
     execute("DELETE FROM courses WHERE id = ?", (cid,))
     renumber_courses(college_code, major_code)
     return jsonify({'message': '删除成功'})
@@ -190,6 +195,16 @@ def delete_college(code):
     college = query("SELECT * FROM colleges WHERE code = ?", (code,), one=True)
     if not college:
         return jsonify({'error': '学院不存在'}), 404
+    # Cascade: schedules → teacher_classes → students(grades+users) → courses → majors
+    execute("DELETE FROM schedules WHERE college_code = ?", (code,))
+    execute("DELETE FROM teacher_classes WHERE college_code = ?", (code,))
+    students = query("SELECT id, user_id FROM students WHERE college_code = ?", (code,))
+    for s in students:
+        if s['user_id']:
+            execute("DELETE FROM users WHERE id = ?", (s['user_id'],))
+    execute("DELETE FROM students WHERE college_code = ?", (code,))
+    execute("DELETE FROM courses WHERE college_code = ?", (code,))
+    execute("DELETE FROM majors WHERE college_code = ?", (code,))
     execute("DELETE FROM colleges WHERE code = ?", (code,))
     renumber_colleges()
     return jsonify({'message': '删除成功'})
@@ -284,6 +299,16 @@ def delete_major(mid):
     if not major:
         return jsonify({'error': '专业不存在'}), 404
     college_code = major['college_code']
+    major_code = major['code']
+    # Cascade: schedules → teacher_classes → students(grades+users) → courses
+    execute("DELETE FROM schedules WHERE college_code = ? AND major_code = ?", (college_code, major_code))
+    execute("DELETE FROM teacher_classes WHERE college_code = ? AND major_code = ?", (college_code, major_code))
+    students = query("SELECT id, user_id FROM students WHERE college_code = ? AND major_code = ?", (college_code, major_code))
+    for s in students:
+        if s['user_id']:
+            execute("DELETE FROM users WHERE id = ?", (s['user_id'],))
+    execute("DELETE FROM students WHERE college_code = ? AND major_code = ?", (college_code, major_code))
+    execute("DELETE FROM courses WHERE college_code = ? AND major_code = ?", (college_code, major_code))
     execute("DELETE FROM majors WHERE id = ?", (mid,))
     renumber_majors(college_code)
     return jsonify({'message': '删除成功'})

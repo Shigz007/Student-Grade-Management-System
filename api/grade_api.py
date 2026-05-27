@@ -21,8 +21,7 @@ def get_grades():
     args = []
 
     if g.user['role'] == 'student':
-        user = query("SELECT * FROM users WHERE id = ?", (g.user['user_id'],), one=True)
-        student = query("SELECT * FROM students WHERE name = ?", (user['username'],), one=True)
+        student = query("SELECT * FROM students WHERE user_id = ?", (g.user['user_id'],), one=True)
         if student:
             where.append("g.student_id = ?")
             args.append(student['id'])
@@ -73,7 +72,7 @@ def get_grades():
         JOIN students s ON g.student_id = s.id
         JOIN courses c ON g.course_id = c.id
         JOIN colleges cl ON c.college_code = cl.code
-        JOIN majors m ON c.college_code = m.college_code AND c.major_code = m.code
+        LEFT JOIN majors m ON c.college_code = m.college_code AND c.major_code = m.code
     """
     if where:
         sql += " WHERE " + " AND ".join(where)
@@ -173,8 +172,7 @@ def get_years():
 @login_required
 def get_stats():
     if g.user['role'] == 'student':
-        user = query("SELECT * FROM users WHERE id = ?", (g.user['user_id'],), one=True)
-        student = query("SELECT * FROM students WHERE name = ?", (user['username'],), one=True)
+        student = query("SELECT * FROM students WHERE user_id = ?", (g.user['user_id'],), one=True)
         student_id = student['id'] if student else None
     else:
         student_id = request.args.get('student_id', '').strip()
@@ -230,8 +228,7 @@ def export_grades():
     args = []
 
     if g.user['role'] == 'student':
-        user = query("SELECT * FROM users WHERE id = ?", (g.user['user_id'],), one=True)
-        student = query("SELECT * FROM students WHERE name = ?", (user['username'],), one=True)
+        student = query("SELECT * FROM students WHERE user_id = ?", (g.user['user_id'],), one=True)
         if student:
             where.append("g.student_id = ?")
             args.append(student['id'])
@@ -276,7 +273,7 @@ def export_grades():
         JOIN students s ON g.student_id = s.id
         JOIN courses c ON g.course_id = c.id
         JOIN colleges cl ON c.college_code = cl.code
-        JOIN majors m ON c.college_code = m.college_code AND c.major_code = m.code
+        LEFT JOIN majors m ON c.college_code = m.college_code AND c.major_code = m.code
     """
     if where:
         sql += " WHERE " + " AND ".join(where)

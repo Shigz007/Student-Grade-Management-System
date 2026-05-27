@@ -350,27 +350,43 @@ print(f"Courses seeded: {len(courses)}")
 # Fresh random Chinese names
 SURNAMES = ['王', '李', '张', '刘', '陈', '杨', '黄', '赵', '吴', '周', '徐', '孙', '马', '朱', '胡', '林', '郭', '何', '高', '罗',
             '郑', '梁', '谢', '宋', '唐', '许', '韩', '冯', '邓', '曹', '彭', '曾', '萧', '田', '董', '潘', '袁', '蔡', '蒋', '余',
-            '于', '杜', '叶', '程', '苏', '魏', '吕', '丁', '任', '沈', '姚', '卢', '姜', '崔', '钟', '谭', '陆', '汪', '范', '金']
+            '于', '杜', '叶', '程', '苏', '魏', '吕', '丁', '任', '沈', '姚', '卢', '姜', '崔', '钟', '谭', '陆', '汪', '范', '金',
+            '石', '方', '白', '秦', '段', '江', '史', '侯', '龙', '万', '雷', '钱', '汤', '尹', '易', '常', '武', '乔', '贺', '赖',
+            '龚', '文', '康', '毛', '邱', '向', '廖', '邹', '熊', '孟', '戴', '夏', '薛', '邵', '傅', '汪', '贾', '阎', '郝', '孔']
 GIVEN_MALE = ['伟', '强', '磊', '军', '勇', '杰', '涛', '明', '辉', '鹏', '浩', '峰', '宇', '轩', '文', '博', '超', '毅', '晨', '睿',
-              '飞', '彬', '豪', '哲', '恒', '诚', '安', '宁', '龙', '威', '阳', '志', '健', '凯', '俊', '刚', '亮', '平', '毅', '翔']
+              '飞', '彬', '豪', '哲', '恒', '诚', '安', '宁', '龙', '威', '阳', '志', '健', '凯', '俊', '刚', '亮', '平', '翔', '斌',
+              '松', '霖', '旭', '川', '震', '坤', '裕', '楠', '良', '成', '庆', '彦', '宏', '建', '家', '友', '德', '兴', '永', '源']
 GIVEN_FEMALE = ['芳', '敏', '静', '丽', '婷', '雪', '琳', '玲', '瑶', '颖', '娜', '莉', '娟', '霞', '萍', '红', '梅', '洁', '蓉', '燕',
-                '婷', '怡', '欣', '雨', '思', '文', '瑜', '婉', '悦', '蕾', '菲', '兰', '慧', '云', '佳', '秀', '晶', '馨', '月', '凤']
-GIVEN_NEUTRAL = ['子涵', '梓轩', '雨桐', '浩然', '一鸣', '天佑', '俊杰', '思远', '乐天', '逸飞', '星辰', '沐阳', '若兮', '瑾瑜', '知行',
-                 '修远', '明哲', '致远', '承志', '凌云', '瑞霖', '玉泽', '景行', '怀瑾', '握瑜', '含章', '贞元', '颖川', '建安', '元亮']
+                '怡', '欣', '雨', '思', '文', '瑜', '婉', '悦', '蕾', '菲', '兰', '慧', '云', '佳', '秀', '晶', '馨', '月', '凤', '珠',
+                '巧', '美', '露', '婵', '姬', '环', '翠', '芬', '芝', '娥', '淑', '惠', '丹', '君', '筠', '艳', '彩', '春', '秋', '碧']
+
+_used_names = set()
 
 def random_name():
+    for _ in range(1000):
+        surname = random.choice(SURNAMES)
+        gender_roll = random.random()
+        if gender_roll < 0.48:
+            given = random.choice(GIVEN_MALE)
+            gender = '男'
+        elif gender_roll < 0.93:
+            given = random.choice(GIVEN_FEMALE)
+            gender = '女'
+        else:
+            name_pool = ['子涵', '梓轩', '雨桐', '浩然', '一鸣', '天佑', '俊杰', '思远', '乐天', '逸飞',
+                        '星辰', '沐阳', '若兮', '瑾瑜', '知行', '修远', '明哲', '致远', '承志', '凌云']
+            given = random.choice(name_pool)
+            gender = random.choice(['男', '女'])
+        full = surname + given
+        if full not in _used_names:
+            _used_names.add(full)
+            return full, gender
+    # Fallback: append a digit
     surname = random.choice(SURNAMES)
-    gender_roll = random.random()
-    if gender_roll < 0.45:
-        given = random.choice(GIVEN_MALE)
-        gender = '男'
-    elif gender_roll < 0.9:
-        given = random.choice(GIVEN_FEMALE)
-        gender = '女'
-    else:
-        given = random.choice(GIVEN_NEUTRAL)
-        gender = random.choice(['男', '女'])
-    return surname + given, gender
+    given = random.choice(GIVEN_MALE + GIVEN_FEMALE)
+    full = surname + given + str(random.randint(1, 99))
+    _used_names.add(full)
+    return full, random.choice(['男', '女'])
 
 # Generate students across all colleges and majors
 RANDOM_SEED = 42
@@ -390,34 +406,60 @@ college_majors = {
     '11': ['01', '02', '03', '04'],
 }
 
-student_records = []
+# Generate students across all colleges and majors
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
+
+college_majors = {
+    '01': ['01', '02', '03'],
+    '02': ['01', '02'],
+    '03': ['01', '02', '03'],
+    '04': ['01', '02', '03'],
+    '05': ['01', '02', '03'],
+    '06': ['01', '02'],
+    '07': ['01', '02'],
+    '08': ['01', '02'],
+    '09': ['01', '02'],
+    '10': ['01', '02'],
+    '11': ['01', '02', '03', '04'],
+}
+
+DEFAULT_STUDENT_PASSWORD = 'Ad112233'
+
+# Build class list: (college_code, major_code, class_name)
+all_classes = []
 for college_code, majors in college_majors.items():
     for major_code in majors:
-        num_classes = 1
-        for class_seq in range(1, num_classes + 1):
-            cls = str(class_seq).zfill(2)
-            num_students = random.randint(3, 5)
-            for seq in range(1, num_students + 1):
-                student_no = f'24{college_code}{major_code}{cls}{str(seq).zfill(2)}'
-                name, gender = random_name()
-                phone = f'138{random.randint(10000000, 99999999)}'
-                student_records.append((student_no, name, gender, '2024', college_code, major_code, phone))
+        # 2 classes per major
+        for cls_seq in range(1, 3):
+            cls_name = str(cls_seq).zfill(2)
+            all_classes.append((college_code, major_code, cls_name))
+
+print(f"Total classes to generate: {len(all_classes)}")
+
+student_records = []
+for college_code, major_code, class_name in all_classes:
+    num_students = random.randint(25, 35)
+    for seq in range(1, num_students + 1):
+        student_no = f'24{college_code}{major_code}{class_name}{str(seq).zfill(2)}'
+        name, gender = random_name()
+        phone = f'138{random.randint(10000000, 99999999)}'
+        student_records.append((student_no, name, gender, '2024', college_code, major_code, class_name, phone))
 
 random.shuffle(student_records)
 
 student_ids = []
 for s in student_records:
     if not query("SELECT id FROM students WHERE student_no = ?", (s[0],)):
-        cls_name = s[0][6:8] if len(s[0]) >= 8 else ''
         if not query("SELECT id FROM users WHERE username = ?", (s[1],)):
             uid = execute("INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
-                          (s[1], generate_password_hash('Ad112233'), 'student'))
+                          (s[1], generate_password_hash(DEFAULT_STUDENT_PASSWORD), 'student'))
         else:
             uid = query("SELECT id FROM users WHERE username = ?", (s[1],), one=True)['id']
         sid = execute(
             "INSERT INTO students (student_no, name, gender, enrollment_year, college_code, major_code, class_name, phone, email, user_id) "
             "VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (s[0], s[1], s[2], s[3], s[4], s[5], cls_name, s[6], '', uid)
+            (s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], '', uid)
         )
         student_ids.append(sid)
     else:
@@ -425,26 +467,119 @@ for s in student_records:
         student_ids.append(existing[0]['id'])
 print(f"Students seeded: {len(student_ids)}")
 
-# Generate grades
-course_rows = query("SELECT id, code, college_code FROM courses")
-course_by_college = {}
+# ===== Teachers =====
+TEACHER_NAMES = [
+    ('张教授', 'TcAb12X'), ('李老师', 'TcCd34Y'), ('王导师', 'TcEf56Z'),
+    ('刘教授', 'TcGh78A'), ('陈老师', 'TcIj90B'), ('杨老师', 'TcKl12C'),
+    ('黄教授', 'TcMn34D'), ('赵老师', 'TcOp56E'), ('周导师', 'TcQr78F'),
+    ('吴教授', 'TcSt90G'), ('徐老师', 'TcUv12H'), ('孙老师', 'TcWx34I'),
+    ('马教授', 'TcYz56J'), ('胡老师', 'TcAb78K'), ('林老师', 'TcCd90L'),
+    ('郭教授', 'TcEf12M'), ('何老师', 'TcGh34N'), ('高导师', 'TcIj56O'),
+    ('罗教授', 'TcKl78P'), ('郑老师', 'TcMn90Q'), ('梁老师', 'TcOp12R'),
+    ('谢教授', 'TcQr34S'), ('宋老师', 'TcSt56T'), ('唐导师', 'TcUv78U'),
+    ('韩教授', 'TcWx90V'), ('冯老师', 'TcYz12W'), ('邓老师', 'TcAb34X'),
+    ('曹教授', 'TcCd56Y'), ('彭老师', 'TcEf78Z'), ('曾导师', 'TcGh90M'),
+]
+
+# Assign each teacher 2-5 classes from across the system
+teacher_class_assignments = []  # (teacher_name, college_code, major_code, class_name)
+remaining_classes = list(all_classes)
+random.shuffle(remaining_classes)
+
+for i, (tname, tpwd) in enumerate(TEACHER_NAMES):
+    num_classes = min(random.randint(2, 5), len(remaining_classes))
+    if num_classes < 1:
+        num_classes = random.randint(2, 5)
+        assigned = random.sample(all_classes, min(num_classes, len(all_classes)))
+    else:
+        assigned = remaining_classes[:num_classes]
+        remaining_classes = remaining_classes[num_classes:]
+    for cls in assigned:
+        teacher_class_assignments.append((tname, cls[0], cls[1], cls[2]))
+
+teacher_count = 0
+for tname, tpwd in TEACHER_NAMES:
+    if not query("SELECT id FROM users WHERE username = ?", (tname,)):
+        uid = execute("INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
+                      (tname, generate_password_hash(tpwd), 'teacher'))
+        teacher_count += 1
+    else:
+        uid = query("SELECT id FROM users WHERE username = ?", (tname,), one=True)['id']
+
+    for _, cc, mc, cn in teacher_class_assignments:
+        if _ == tname:
+            if not query("SELECT id FROM teacher_classes WHERE user_id = ? AND college_code = ? AND major_code = ? AND class_name = ?",
+                        (uid, cc, mc, cn)):
+                execute("INSERT INTO teacher_classes (user_id, college_code, major_code, class_name) VALUES (?,?,?,?)",
+                        (uid, cc, mc, cn))
+
+print(f"Teachers seeded: {teacher_count}")
+print(f"Teacher-class assignments: {len(teacher_class_assignments)}")
+
+# ===== Schedules =====
+# For each class that has a teacher, generate a weekly schedule
+TIME_SLOTS = 6  # 1-6
+DAYS = 5  # 1-5
+
+schedule_count = 0
+for tname, college_code, major_code, class_name in teacher_class_assignments:
+    # Check if schedule already exists for this class
+    existing = query(
+        "SELECT COUNT(*) as cnt FROM schedules WHERE college_code = ? AND major_code = ? AND class_name = ?",
+        (college_code, major_code, class_name)
+    )
+    if existing[0]['cnt'] > 0:
+        continue
+
+    # Get courses for this major
+    major_courses = query(
+        "SELECT id, code, name FROM courses WHERE college_code = ? AND major_code = ?",
+        (college_code, major_code)
+    )
+    if not major_courses:
+        continue
+
+    # Build schedule: fill ~60-80% of slots (5 days × 4-5 slots per day)
+    # We limit to time_slots 1-5 for most (slot 6 is evening, fewer classes)
+    filled = 0
+    for day in range(1, DAYS + 1):
+        # Each day has ~3-5 courses
+        day_slots = random.sample(range(1, 6), random.randint(3, 5))
+        for slot in day_slots:
+            course = random.choice(major_courses)
+            if not query(
+                "SELECT id FROM schedules WHERE college_code = ? AND major_code = ? AND class_name = ? AND day_of_week = ? AND time_slot = ?",
+                (college_code, major_code, class_name, day, slot)
+            ):
+                execute(
+                    "INSERT INTO schedules (college_code, major_code, class_name, day_of_week, time_slot, course_id) VALUES (?,?,?,?,?,?)",
+                    (college_code, major_code, class_name, day, slot, course['id'])
+                )
+                filled += 1
+
+    schedule_count += filled
+
+print(f"Schedule entries seeded: {schedule_count}")
+
+# ===== Grades =====
+# Group courses by (college_code, major_code) for major-specific assignment
+course_rows = query("SELECT id, code, college_code, major_code FROM courses")
+course_by_major = {}
 for c in course_rows:
-    course_by_college.setdefault(c['college_code'], []).append(c)
+    course_by_major.setdefault((c['college_code'], c['major_code']), []).append(c)
 
 grade_count = 0
-student_rows = query("SELECT id, student_no, college_code FROM students")
+student_rows = query("SELECT id, student_no, college_code, major_code FROM students")
 semester_years = ['2025', '2026']
 semester_terms = ['一', '二']
 
 for student in student_rows:
     sid = student['id']
-    college = student['student_no'][2:4]
-    available = course_by_college.get(college, [])
+    available = course_by_major.get((student['college_code'], student['major_code']), [])
     if not available:
         continue
-    num_courses = random.randint(2, min(4, len(available)))
-    chosen = random.sample(available, num_courses)
-    for course in chosen:
+    # Assign grade for EVERY course in this student's major
+    for course in available:
         if not query("SELECT id FROM grades WHERE student_id = ? AND course_id = ?",
                      (sid, course['id'])):
             score = round(random.gauss(72, 16), 1)
@@ -456,9 +591,22 @@ for student in student_rows:
                 (sid, course['id'], score, sy, st)
             )
             grade_count += 1
+
 print(f"Grades seeded: {grade_count}")
 
 user_count = query("SELECT COUNT(*) as cnt FROM users")[0]['cnt']
-print(f"\nDone! Total users: {user_count}, Students: {len(student_ids)}, Grades: {grade_count}")
-print("Accounts: admin/admin123 | teacher/teacher123")
-print("All student accounts password: Ad112233")
+teacher_class_count = query("SELECT COUNT(*) as cnt FROM teacher_classes")[0]['cnt']
+schedule_entry_count = query("SELECT COUNT(*) as cnt FROM schedules")[0]['cnt']
+print(f"\n=== Seed Complete ===")
+print(f"Users: {user_count}")
+print(f"Students: {len(student_ids)}")
+print(f"Teachers: {teacher_count}")
+print(f"Teacher-Class assignments: {teacher_class_count}")
+print(f"Schedule entries: {schedule_entry_count}")
+print(f"Grades: {grade_count}")
+print(f"Classes: {len(all_classes)}")
+print(f"\nAdmin: admin/admin123")
+print(f"Demo Teacher: teacher/teacher123")
+print(f"All student passwords: {DEFAULT_STUDENT_PASSWORD}")
+for tname, tpwd in TEACHER_NAMES[:3]:
+    print(f"Teacher: {tname}/{tpwd}")

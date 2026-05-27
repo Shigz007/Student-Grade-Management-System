@@ -1,5 +1,17 @@
 {% extends "student/base.html" %}
 {% block content %}
+<style>
+    #schedule-table td:last-child,
+    #schedule-table th:last-child {
+        position: static !important; right: auto !important;
+        box-shadow: none !important; z-index: auto !important;
+        padding-right: 0.75rem !important;
+    }
+    .info-row { display: flex; flex-wrap: wrap; margin: 0 -8px; }
+    .info-item { flex: 1 1 33%; min-width: 160px; padding: 6px 8px; }
+    .info-item label { display: block; font-size: 0.7rem; color: #8898aa; text-transform: uppercase; margin-bottom: 2px; }
+    .info-item span { font-size: 0.9rem; font-weight: 500; }
+</style>
 <div class="row">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card stat-card bg-success text-white z-depth-1">
@@ -44,6 +56,40 @@
 </div>
 
 <div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="card z-depth-1">
+            <div class="card-header"><h6 class="heading h6 mb-0"><i class="fas fa-id-card mr-2"></i>个人信息</h6></div>
+            <div class="card-body" id="student-info">
+                <div class="info-row">
+                    <div class="info-item"><label>姓名</label><span id="info-name">-</span></div>
+                    <div class="info-item"><label>学号</label><span id="info-student-no">-</span></div>
+                    <div class="info-item"><label>性别</label><span id="info-gender">-</span></div>
+                    <div class="info-item"><label>学院</label><span id="info-college">-</span></div>
+                    <div class="info-item"><label>专业</label><span id="info-major">-</span></div>
+                    <div class="info-item"><label>班级</label><span id="info-class">-</span></div>
+                    <div class="info-item"><label>入学年份</label><span id="info-year">-</span></div>
+                    <div class="info-item"><label>电话</label><span id="info-phone">-</span></div>
+                    <div class="info-item"><label>邮箱</label><span id="info-email">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7 mb-4">
+        <div class="card z-depth-1">
+            <div class="card-header"><h6 class="heading h6 mb-0"><i class="fas fa-calendar-alt mr-2"></i>我的课表</h6></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table table-bordered mb-0" id="schedule-table">
+                    <thead><tr><th class="text-center bg-light" style="width:100px;">时间</th><th class="text-center bg-light">周一</th><th class="text-center bg-light">周二</th><th class="text-center bg-light">周三</th><th class="text-center bg-light">周四</th><th class="text-center bg-light">周五</th></tr></thead>
+                    <tbody id="schedule-grid"><tr><td colspan="6" class="text-center text-muted py-2">选择班级后加载</td></tr></tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-12">
         <div class="card z-depth-1">
             <div class="card-header"><h6 class="heading h6 mb-0">我的成绩</h6></div>
@@ -62,10 +108,14 @@
 <script>
 $(function() {
     checkAuth();
+
+    var TIME_SLOTS = ['08:30-10:05', '10:25-12:00', '13:30-15:05', '15:25-17:00', '17:10-18:45', '19:00-20:25'];
+
     api.getStats().then(function(stats) {
         $('#stat-avg').text(stats.avg); $('#stat-max').text(stats.max);
         $('#stat-pass').text(stats.pass_rate + '%'); $('#stat-count').text(stats.count);
     });
+
     api.getGrades({}).then(function(grades) {
         var html = '';
         grades.forEach(function(g) {
@@ -74,6 +124,46 @@ $(function() {
             html += '<tr><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td></tr>';
         });
         $('#my-grades').html(html || '<tr><td colspan="5" class="text-center text-muted">暂无成绩</td></tr>');
+    });
+
+    // Load my info and schedule
+    api.getMyInfo().then(function(info) {
+        $('#info-name').text(info.name || '-');
+        $('#info-student-no').text(info.student_no || '-');
+        $('#info-gender').text(info.gender || '-');
+        $('#info-college').text(info.college_name || '-');
+        $('#info-major').text(info.major_name || '-');
+        $('#info-class').text(info.class_name ? info.class_name + '班' : '-');
+        $('#info-year').text(info.enrollment_year || '-');
+        $('#info-phone').text(info.phone || '-');
+        $('#info-email').text(info.email || '-');
+
+        // Load schedule
+        if (info.college_code && info.major_code && info.class_name) {
+            api.getSchedules({college_code: info.college_code, major_code: info.major_code, class_name: info.class_name}).then(function(entries) {
+                var data = {};
+                for (var d = 1; d <= 5; d++) data[d] = {};
+                entries.forEach(function(e) { data[e.day_of_week][e.time_slot] = e; });
+                var html = '';
+                for (var s = 0; s < 6; s++) {
+                    html += '<tr><td class="text-center bg-light align-middle text-sm">' + TIME_SLOTS[s] + '</td>';
+                    for (var d = 1; d <= 5; d++) {
+                        var entry = data[d][s + 1];
+                        if (entry) {
+                            html += '<td class="text-center p-1"><span class="btn btn-sm btn-primary btn-block" style="cursor:default;font-size:0.75rem;">' + entry.course_name + '</span></td>';
+                        } else {
+                            html += '<td class="text-center p-1"><span class="btn btn-sm btn-outline-light btn-block text-muted" style="cursor:default;">-</span></td>';
+                        }
+                    }
+                    html += '</tr>';
+                }
+                $('#schedule-grid').html(html);
+            }).fail(function() {
+                $('#schedule-grid').html('<tr><td colspan="6" class="text-center text-muted">暂无课表数据</td></tr>');
+            });
+        }
+    }).fail(function() {
+        $('#student-info').html('<p class="text-muted text-center">无法加载个人信息</p>');
     });
 });
 </script>

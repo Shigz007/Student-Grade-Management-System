@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify, g
-import re
+from flask import Blueprint, request, jsonify, g, Response
+import re, csv, io
 from auth import login_required, teacher_or_admin, admin_required
 from db import query, execute
 
@@ -214,3 +214,83 @@ def get_stats():
         'pass_rate': round(passed / len(scores) * 100, 1),
         'count': len(scores)
     })
+
+
+@grade_bp.route('/api/grades/export', methods=['GET'])
+@login_required
+def export_grades():
+    student_id = request.args.get('student_id', '').strip()
+    semester_year = request.args.get('semester_year', '').strip()
+    semester_term = request.args.get('semester_term', '').strip()
+    course_id = request.args.get('course_id', '').strip()
+    college_code = request.args.get('college_code', '').strip()
+    major_code = request.args.get('major_code', '').strip()
+
+    where = []
+    args = []
+
+    if g.user['role'] == 'student':
+        user = query("SELECT * FROM users WHERE id = ?", (g.user['user_id'],), one=True)
+        student = query("SELECT * FROM students WHERE name = ?", (user['username'],), one=True)
+        if student:
+            where.append("g.student_id = ?")
+            args.append(student['id'])
+        else:
+            return Response('', mimetype='text/csv')
+    elif g.user['role'] == 'teacher':
+        tcs = query("SELECT college_code, major_code, class_name FROM teacher_classes WHERE user_id = ?",
+                    (g.user['user_id'],))
+        if not tcs:
+            return Response('', mimetype='text/csv')
+        tconds = []
+        for tc in tcs:
+            tconds.append("(s.college_code = ? AND s.major_code = ? AND SUBSTR(s.student_no, 7, 2) = ?)")
+            args.extend([tc['college_code'], tc['major_code'], tc['class_name']])
+        where.append("(" + " OR ".join(tconds) + ")")
+    elif student_id:
+        where.append("g.student_id = ?")
+        args.append(int(student_id))
+
+    if semester_year:
+        where.append("g.semester_year = ?")
+        args.append(semester_year)
+    if semester_term:
+        where.append("g.semester_term = ?")
+        args.append(semester_term)
+    if course_id:
+        where.append("g.course_id = ?")
+        args.append(int(course_id))
+    if college_code:
+        where.append("c.college_code = ?")
+        args.append(college_code)
+    if major_code:
+        where.append("c.major_code = ?")
+        args.append(major_code)
+
+    sql = """
+        SELECT s.student_no, s.name as student_name,
+               c.code as course_code, c.name as course_name,
+               g.score, g.semester_year, g.semester_term,
+               cl.name as college_name, m.name as major_name
+        FROM grades g
+        JOIN students s ON g.student_id = s.id
+        JOIN courses c ON g.course_id = c.id
+        JOIN colleges cl ON c.college_code = cl.code
+        JOIN majors m ON c.college_code = m.college_code AND c.major_code = m.code
+    """
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY g.id DESC"
+
+    rows = query(sql, args)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['学号', '姓名', '课程代码', '课程名称', '成绩', '学年', '学期', '学院', '专业'])
+    for r in rows:
+        writer.writerow([r['student_no'], r['student_name'], r['course_code'], r['course_name'],
+                        r['score'], r['semester_year'], r['semester_term'], r['college_name'], r['major_name']])
+
+    output.seek(0)
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=grades.csv'})

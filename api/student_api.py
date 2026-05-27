@@ -1,5 +1,5 @@
-import random
-from flask import Blueprint, request, jsonify, g
+import random, csv, io
+from flask import Blueprint, request, jsonify, g, Response
 from werkzeug.security import generate_password_hash
 from auth import login_required, teacher_or_admin, admin_required
 from db import query, execute
@@ -114,6 +114,33 @@ def get_next_student_no():
     return jsonify(_gen_student_no(prefix + next_class))
 
 
+@student_bp.route('/api/students/me', methods=['GET'])
+@login_required
+def get_my_info():
+    if g.user['role'] != 'student':
+        return jsonify({'error': '仅学生可访问'}), 403
+    user = query("SELECT * FROM users WHERE id = ?", (g.user['user_id'],), one=True)
+    student = query("SELECT * FROM students WHERE name = ?", (user['username'],), one=True)
+    if not student:
+        return jsonify({'error': '学生信息不存在'}), 404
+    cl = query("SELECT name FROM colleges WHERE code = ?", (student['college_code'],), one=True)
+    mj = query("SELECT name FROM majors WHERE college_code = ? AND code = ?", (student['college_code'], student['major_code']), one=True)
+    class_name = student['student_no'][6:8] if student['student_no'] and len(student['student_no']) >= 8 else ''
+    return jsonify({
+        'student_no': student['student_no'],
+        'name': student['name'],
+        'gender': student['gender'],
+        'enrollment_year': student['enrollment_year'],
+        'college_code': student['college_code'],
+        'major_code': student['major_code'],
+        'college_name': cl['name'] if cl else '',
+        'major_name': mj['name'] if mj else '',
+        'class_name': class_name,
+        'phone': student['phone'],
+        'email': student['email'],
+    })
+
+
 @student_bp.route('/api/students/classes', methods=['GET'])
 @teacher_or_admin
 def get_classes():
@@ -202,3 +229,47 @@ def delete_student(sid):
     execute("DELETE FROM users WHERE username = ? AND role = 'student'", (student['name'],))
     execute("DELETE FROM students WHERE id = ?", (sid,))
     return jsonify({'message': '删除成功'})
+
+
+@student_bp.route('/api/students/export', methods=['GET'])
+@login_required
+def export_students():
+    if g.user['role'] == 'student':
+        return jsonify({'error': '无权限'}), 403
+
+    where = []
+    args = []
+
+    if g.user['role'] == 'teacher':
+        tcs = query("SELECT college_code, major_code, class_name FROM teacher_classes WHERE user_id = ?",
+                    (g.user['user_id'],))
+        if not tcs:
+            return Response('', mimetype='text/csv')
+        tconds = []
+        for tc in tcs:
+            tconds.append("(s.college_code = ? AND s.major_code = ? AND SUBSTR(s.student_no, 7, 2) = ?)")
+            args.extend([tc['college_code'], tc['major_code'], tc['class_name']])
+        where.append("(" + " OR ".join(tconds) + ")")
+
+    sql = """
+        SELECT s.*, cl.name AS college_name, m.name AS major_name
+        FROM students s
+        JOIN colleges cl ON s.college_code = cl.code
+        JOIN majors m ON s.college_code = m.college_code AND s.major_code = m.code
+    """
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY s.student_no"
+
+    rows = query(sql, args)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['学号', '姓名', '性别', '入学年份', '学院', '专业', '班级', '电话', '邮箱'])
+    for r in rows:
+        cls = r['student_no'][6:8] if r['student_no'] and len(r['student_no']) >= 8 else ''
+        writer.writerow([r['student_no'], r['name'], r['gender'], r['enrollment_year'],
+                        r['college_name'], r['major_name'], cls, r['phone'], r['email']])
+
+    output.seek(0)
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=students.csv'})

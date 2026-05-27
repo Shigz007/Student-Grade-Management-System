@@ -3,6 +3,7 @@ from api.student_api import student_bp
 from api.grade_api import grade_bp
 from api.course_api import course_bp
 from api.teacher_api import teacher_bp
+from api.schedule_api import schedule_bp
 
 
 def register_blueprints(app):
@@ -11,3 +12,4 @@ def register_blueprints(app):
     app.register_blueprint(grade_bp)
     app.register_blueprint(course_bp)
     app.register_blueprint(teacher_bp)
+    app.register_blueprint(schedule_bp)

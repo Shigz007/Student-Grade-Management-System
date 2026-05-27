@@ -1,0 +1,533 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<ul class="nav nav-tabs mb-4" id="course-tabs">
+    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-colleges">学院</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-majors">专业</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-courses">课程</a></li>
+</ul>
+
+<div class="tab-content">
+<!-- ===== Colleges Tab ===== -->
+<div class="tab-pane fade show active" id="tab-colleges">
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">学院管理</h6></div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width:240px;">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                <input type="text" class="form-control form-control-sm" id="college-search" placeholder="搜索学院...">
+            </div>
+            <button class="btn btn-sm btn-primary mb-2" id="btn-add-college"><i class="fas fa-plus mr-1"></i>添加学院</button>
+        </div>
+    </div>
+</div>
+<div class="card z-depth-1">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="heading h6 mb-0">学院列表</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>学院代码</th><th>学院名称</th><th>操作</th></tr></thead>
+            <tbody id="college-table"></tbody>
+        </table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ===== Majors Tab ===== -->
+<div class="tab-pane fade" id="tab-majors">
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">专业管理</h6></div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 280px;">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                <input type="text" class="form-control form-control-sm" id="major-search" placeholder="搜索专业代码/名称...">
+            </div>
+            <button class="btn btn-sm btn-primary mb-2" id="btn-add-major"><i class="fas fa-plus mr-1"></i>添加专业</button>
+        </div>
+        <div class="row">
+            <div class="col-md mb-2">
+                <label class="form-control-label small text-muted">学院</label>
+                <select class="form-control form-control-sm" id="major-filter-college"><option value="">全部学院</option></select>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card z-depth-1">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="heading h6 mb-0">专业列表</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>专业代码</th><th>专业名称</th><th>所属学院</th><th>操作</th></tr></thead>
+            <tbody id="major-table"></tbody>
+        </table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ===== Courses Tab ===== -->
+<div class="tab-pane fade" id="tab-courses">
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">课程筛选</h6></div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 280px;">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                <input type="text" class="form-control form-control-sm" id="course-search" placeholder="搜索课程代码/名称...">
+            </div>
+            <button class="btn btn-sm btn-primary mb-2" id="btn-add-course"><i class="fas fa-plus mr-1"></i>添加课程</button>
+        </div>
+        <div class="row">
+            <div class="col-md mb-2">
+                <label class="form-control-label small text-muted">学院</label>
+                <select class="form-control form-control-sm" id="course-filter-college"><option value="">全部学院</option></select>
+            </div>
+            <div class="col-md mb-2">
+                <label class="form-control-label small text-muted">专业</label>
+                <select class="form-control form-control-sm" id="course-filter-major"><option value="">全部专业</option></select>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card z-depth-1">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="heading h6 mb-0">课程列表</h6>
+        <div class="d-flex align-items-center">
+            <small class="text-muted mr-2">每页</small>
+            <select class="form-control form-control-sm" style="width:72px" id="course-page-size"><option value="10">10</option><option value="30">30</option><option value="50">50</option></select>
+            <small class="text-muted ml-2">条</small>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>课程代码</th><th>课程名称</th><th>专业</th><th>学院</th><th>操作</th></tr></thead>
+            <tbody id="course-table"></tbody>
+        </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap px-3 py-2 border-top">
+            <small class="text-muted mb-1" id="course-page-info"></small>
+            <div class="d-flex align-items-center mx-2 mb-1"><small class="text-muted mr-1">跳至</small><input type="text" class="form-control form-control-sm page-jump-input" id="course-jump-page"><small class="text-muted ml-1">页</small></div>
+            <nav><ul class="pagination pagination-sm mb-0 flex-wrap" id="course-pagination"></ul></nav>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+<!-- Course Modal -->
+<div class="modal fade" id="course-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="course-modal-title">添加课程</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-course-id">
+                <div class="form-group"><label class="form-control-label">课程代码 <small class="text-muted">（自动）</small></label><input type="text" class="form-control form-control-sm" id="course-form-code" readonly></div>
+                <div class="form-group"><label class="form-control-label">课程名称 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="course-form-name"></div>
+                <div class="form-group"><label class="form-control-label">所属学院 <span class="text-danger">*</span></label><select class="form-control form-control-sm" id="course-form-college"><option value="">选择学院</option></select></div>
+                <div class="form-group"><label class="form-control-label">所属专业 <span class="text-danger">*</span></label><select class="form-control form-control-sm" id="course-form-major"><option value="">选择专业</option></select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-course">保存</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- College Modal -->
+<div class="modal fade" id="college-modal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="college-modal-title">添加学院</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-college-orig-code">
+                <div class="form-group"><label class="form-control-label">学院代码 <small class="text-muted">（自动）</small></label><input type="text" class="form-control form-control-sm" id="college-form-code" maxlength="2" readonly></div>
+                <div class="form-group"><label class="form-control-label">学院名称 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="college-form-name"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-college">保存</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Major Modal -->
+<div class="modal fade" id="major-modal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="major-modal-title">添加专业</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-major-id">
+                <div class="form-group"><label class="form-control-label">专业代码 <small class="text-muted">（自动）</small></label><input type="text" class="form-control form-control-sm" id="major-form-code" maxlength="2" readonly></div>
+                <div class="form-group"><label class="form-control-label">专业名称 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="major-form-name"></div>
+                <div class="form-group"><label class="form-control-label">所属学院 <span class="text-danger">*</span></label><select class="form-control form-control-sm" id="major-form-college"><option value="">选择学院</option></select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-major">保存</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    checkAuth();
+
+    // Load college dropdowns
+    function loadCollegeDropdowns() {
+        api.getColleges().then(function(colleges) {
+            var html = '<option value="">全部学院</option>';
+            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; });
+            $('#course-filter-college').html(html);
+        });
+        api.getColleges().then(function(colleges) {
+            var html = '<option value="">全部学院</option>';
+            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; });
+            $('#major-filter-college').html(html);
+            html = '<option value="">选择学院</option>';
+            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; });
+            $('#course-form-college, #major-form-college').html(html);
+        });
+    }
+    loadCollegeDropdowns();
+
+    // College → major cascade + auto-generate course code
+    var isEditingCourse = false, editingCourseOrigCollege = '', editingCourseOrigMajor = '';
+    $('#course-form-college, #course-form-major').on('change', function() {
+        var college = $('#course-form-college').val();
+        var major = $('#course-form-major').val();
+        var changed = !isEditingCourse || college !== editingCourseOrigCollege || major !== editingCourseOrigMajor;
+        if ($(this).is('#course-form-college')) {
+            var $m = $('#course-form-major');
+            if (!college) { $m.html('<option value="">选择专业</option>'); $('#course-form-code').val(''); return; }
+            api.getMajors({college_code: college}).then(function(majors) {
+                var html = '<option value="">选择专业</option>';
+                majors.forEach(function(m) { html += '<option value="' + m.code + '">' + m.name + '</option>'; });
+                $m.html(html);
+                if (isEditingCourse) $m.val(editingCourseOrigMajor);
+                if (changed) generateCourseCode();
+            });
+        } else {
+            if (changed) generateCourseCode();
+        }
+    });
+
+    function generateCourseCode() {
+        var college = $('#course-form-college').val();
+        var major = $('#course-form-major').val();
+        if (!college || !major) { $('#course-form-code').val(''); return; }
+        var codes = allCourses.filter(function(c) {
+            return c.college_code === college && c.major_code === major;
+        }).map(function(c) { return c.code; });
+        var maxNum = 0;
+        codes.forEach(function(code) {
+            var n = parseInt(code);
+            if (!isNaN(n) && n > maxNum) maxNum = n;
+        });
+        var next = String(maxNum + 1).padStart(2, '0');
+        $('#course-form-code').val(next);
+    }
+
+    // Auto-generate major code
+    var isEditingMajor = false, editingMajorOrigCollege = '';
+    $('#major-form-college').on('change', function() {
+        var college = $(this).val();
+        if (isEditingMajor && college === editingMajorOrigCollege) return;
+        if (!college) { $('#major-form-code').val(''); return; }
+        var codes = allMajors.filter(function(m) { return m.college_code === college; }).map(function(m) { return m.code; });
+        var maxNum = 0;
+        codes.forEach(function(code) {
+            var n = parseInt(code);
+            if (!isNaN(n) && n > maxNum) maxNum = n;
+        });
+        $('#major-form-code').val(String(maxNum + 1).padStart(2, '0'));
+    });
+
+    // ===== Courses =====
+    var allCourses = [], coursePage = 1, coursePageSize = 10;
+
+    function loadCourses() {
+        var params = {};
+        var college = $('#course-filter-college').val();
+        var majorVal = $('#course-filter-major').val();
+        if (college) params.college_code = college;
+        if (majorVal) {
+            var parts = majorVal.split('|');
+            params.major_code = parts[1] || parts[0];
+            if (parts[0] && parts[1]) params.college_code = parts[0];
+        }
+        api.getCourses(params).then(function(courses) {
+            var search = $('#course-search').val().trim().toLowerCase();
+            if (search) courses = courses.filter(function(c) { return (c.code + c.name + (c.college_name || '') + (c.major_name || '')).toLowerCase().indexOf(search) !== -1; });
+            allCourses = courses;
+            coursePage = 1;
+            renderCoursePage();
+        });
+    }
+    loadCourses();
+    $('#course-search').on('input', loadCourses);
+    // Load all majors into filter dropdown
+    api.getMajors({}).then(function(majors) {
+        var html = '<option value="">全部专业</option>';
+        majors.forEach(function(m) { html += '<option value="' + m.college_code + '|' + m.code + '">' + m.name + '</option>'; });
+        $('#course-filter-major').html(html);
+    });
+
+    $('#course-filter-college').on('change', function() {
+        var college = $(this).val();
+        var $major = $('#course-filter-major');
+        if (!college) {
+            api.getMajors({}).then(function(majors) {
+                var html = '<option value="">全部专业</option>';
+                majors.forEach(function(m) { html += '<option value="' + m.college_code + '|' + m.code + '">' + m.name + '</option>'; });
+                $major.html(html);
+            });
+            loadCourses();
+            return;
+        }
+        api.getMajors({college_code: college}).then(function(majors) {
+            var html = '<option value="">全部专业</option>';
+            majors.forEach(function(m) { html += '<option value="' + m.college_code + '|' + m.code + '">' + m.name + '</option>'; });
+            $major.html(html);
+            loadCourses();
+        });
+    });
+    $('#course-filter-major').on('change', function() {
+        var val = $(this).val();
+        if (val) {
+            var parts = val.split('|');
+            $('#course-filter-college').val(parts[0]);
+        }
+        loadCourses();
+    });
+
+    function renderCoursePage() {
+        var total = allCourses.length, totalPages = Math.ceil(total / coursePageSize) || 1;
+        if (coursePage > totalPages) coursePage = totalPages;
+        var start = (coursePage - 1) * coursePageSize;
+        var pageData = allCourses.slice(start, start + coursePageSize);
+        var html = '';
+        pageData.forEach(function(c) {
+            html += '<tr><td>' + c.code + '</td><td>' + c.name + '</td><td>' + (c.major_name || '-') + '</td><td>' + (c.college_name || '') + '</td>';
+            html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-course" data-id="' + c.id + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-course" data-id="' + c.id + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
+        });
+        $('#course-table').html(html || '<tr><td colspan="5" class="text-center text-muted">暂无数据</td></tr>');
+        var end = Math.min(start + coursePageSize, total);
+        $('#course-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
+        renderPagination('course', totalPages, coursePage);
+    }
+
+    $('#course-page-size').on('change', function() { coursePageSize = parseInt($(this).val()); coursePage = 1; renderCoursePage(); });
+
+    $('#btn-add-course').click(function() {
+        isEditingCourse = false;
+        $('#edit-course-id').val('');
+        $('#course-modal-title').text('添加课程');
+        $('#course-form-code').val('').prop('readonly', true);
+        $('#course-form-name').val('');
+        $('#course-form-college').val('');
+        $('#course-form-major').html('<option value="">选择专业</option>');
+        $('#course-modal').modal('show');
+    });
+
+    $(document).on('click', '.btn-edit-course', function() {
+        isEditingCourse = true;
+        var id = parseInt($(this).data('id'));
+        var c = allCourses.find(function(x) { return x.id === id; });
+        if (!c) return;
+        editingCourseOrigCollege = c.college_code;
+        editingCourseOrigMajor = c.major_code || '';
+        $('#edit-course-id').val(c.id);
+        $('#course-modal-title').text('编辑课程');
+        $('#course-form-code').val(c.code).prop('readonly', true);
+        $('#course-form-name').val(c.name);
+        $('#course-form-college').val(c.college_code);
+        api.getMajors({college_code: c.college_code}).then(function(majors) {
+            var html = '<option value="">选择专业</option>';
+            majors.forEach(function(m) { html += '<option value="' + m.code + '">' + m.name + '</option>'; });
+            $('#course-form-major').html(html).val(c.major_code || '');
+        });
+        $('#course-modal').modal('show');
+    });
+
+    $('#btn-save-course').click(function() {
+        var id = $('#edit-course-id').val();
+        var data = { code: $('#course-form-code').val().trim(), name: $('#course-form-name').val().trim(), college_code: $('#course-form-college').val(), major_code: $('#course-form-major').val() };
+        if (!data.name || !data.college_code || !data.major_code) { showToast('请填写课程名称、学院和专业', 'warning'); return; }
+        if (id) {
+            api.updateCourse(id, data).then(function() { $('#course-modal').modal('hide'); loadCourses(); showToast('更新成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+        } else {
+            api.addCourse(data).then(function() { $('#course-modal').modal('hide'); loadCourses(); showToast('添加成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+        }
+    });
+
+    $(document).on('click', '.btn-delete-course', function() {
+        if (!confirm('确定删除该课程吗？')) return;
+        api.deleteCourse($(this).data('id')).then(function() { loadCourses(); showToast('删除成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+    });
+
+    // ===== Colleges =====
+    var allColleges = [];
+
+    function loadColleges() {
+        api.getColleges().then(function(colleges) {
+            var search = $('#college-search').val().trim().toLowerCase();
+            if (search) colleges = colleges.filter(function(c) { return (c.code + c.name).toLowerCase().indexOf(search) !== -1; });
+            allColleges = colleges;
+            var html = '';
+            colleges.forEach(function(c) {
+                html += '<tr><td>' + c.code + '</td><td>' + c.name + '</td>';
+                html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-college" data-code="' + c.code + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-college" data-code="' + c.code + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
+            });
+            $('#college-table').html(html || '<tr><td colspan="3" class="text-center text-muted">暂无数据</td></tr>');
+        });
+    }
+    loadColleges();
+    $('#college-search').on('input', loadColleges);
+
+    $('#btn-add-college').click(function() {
+        $('#edit-college-orig-code').val('');
+        $('#college-modal-title').text('添加学院');
+        // Auto-generate next college code
+        var maxNum = 0;
+        allColleges.forEach(function(c) {
+            var n = parseInt(c.code);
+            if (!isNaN(n) && n > maxNum) maxNum = n;
+        });
+        $('#college-form-code').val(String(maxNum + 1).padStart(2, '0')).prop('readonly', true);
+        $('#college-form-name').val('');
+        $('#college-modal').modal('show');
+    });
+
+    $(document).on('click', '.btn-edit-college', function() {
+        var code = $(this).data('code');
+        var c = allColleges.find(function(x) { return x.code === code; });
+        if (!c) return;
+        $('#edit-college-orig-code').val(c.code);
+        $('#college-modal-title').text('编辑学院');
+        $('#college-form-code').val(c.code).prop('readonly', true);
+        $('#college-form-name').val(c.name);
+        $('#college-modal').modal('show');
+    });
+
+    $('#btn-save-college').click(function() {
+        var orig = $('#edit-college-orig-code').val();
+        var code = $('#college-form-code').val().trim();
+        var name = $('#college-form-name').val().trim();
+        if (!name) { showToast('请填写学院名称', 'warning'); return; }
+        if (orig) {
+            api.updateCollege(orig, { code: code, name: name }).then(function() { $('#college-modal').modal('hide'); loadColleges(); loadCollegeDropdowns(); showToast('更新成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+        } else {
+            api.addCollege({ code: code, name: name }).then(function() { $('#college-modal').modal('hide'); loadColleges(); loadCollegeDropdowns(); showToast('添加成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+        }
+    });
+
+    $(document).on('click', '.btn-delete-college', function() {
+        if (!confirm('确定删除该学院吗？相关专业和课程也将受影响。')) return;
+        api.deleteCollege($(this).data('code')).then(function() { loadColleges(); loadCollegeDropdowns(); showToast('删除成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+    });
+
+    // ===== Majors =====
+    var allMajors = [];
+
+    function loadMajors() {
+        var params = {};
+        var college = $('#major-filter-college').val();
+        if (college) params.college_code = college;
+        api.getMajors(params).then(function(majors) {
+            var search = $('#major-search').val().trim().toLowerCase();
+            if (search) majors = majors.filter(function(m) { return (m.code + m.name).toLowerCase().indexOf(search) !== -1; });
+            allMajors = majors;
+            var html = '';
+            majors.forEach(function(m) {
+                html += '<tr><td>' + m.code + '</td><td>' + m.name + '</td><td>' + (m.college_code || '') + '</td>';
+                html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-major" data-id="' + m.id + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-major" data-id="' + m.id + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
+            });
+            $('#major-table').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>');
+        });
+    }
+    loadMajors();
+    $('#major-search').on('input', loadMajors);
+    $('#major-filter-college').on('change', loadMajors);
+
+    $('#btn-add-major').click(function() {
+        isEditingMajor = false;
+        $('#edit-major-id').val('');
+        $('#major-modal-title').text('添加专业');
+        $('#major-form-code').val('').prop('readonly', true);
+        $('#major-form-name').val('');
+        $('#major-form-college').val('');
+        $('#major-modal').modal('show');
+    });
+
+    $(document).on('click', '.btn-edit-major', function() {
+        isEditingMajor = true;
+        var id = parseInt($(this).data('id'));
+        var m = allMajors.find(function(x) { return x.id === id; });
+        if (!m) return;
+        editingMajorOrigCollege = m.college_code;
+        $('#edit-major-id').val(m.id);
+        $('#major-modal-title').text('编辑专业');
+        $('#major-form-code').val(m.code).prop('readonly', true);
+        $('#major-form-name').val(m.name);
+        $('#major-form-college').val(m.college_code);
+        $('#major-modal').modal('show');
+    });
+
+    $('#btn-save-major').click(function() {
+        var id = $('#edit-major-id').val();
+        var data = { code: $('#major-form-code').val().trim(), name: $('#major-form-name').val().trim(), college_code: $('#major-form-college').val() };
+        if (!data.name || !data.college_code) { showToast('请填写专业名称和学院', 'warning'); return; }
+        if (id) {
+            api.updateMajor(id, data).then(function() { $('#major-modal').modal('hide'); loadMajors(); showToast('更新成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+        } else {
+            api.addMajor(data).then(function() { $('#major-modal').modal('hide'); loadMajors(); showToast('添加成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+        }
+    });
+
+    $(document).on('click', '.btn-delete-major', function() {
+        if (!confirm('确定删除该专业吗？')) return;
+        api.deleteMajor($(this).data('id')).then(function() { loadMajors(); showToast('删除成功', 'success'); }).fail(function(xhr) { showToast((xhr.responseJSON && xhr.responseJSON.error) || '操作失败', 'danger'); });
+    });
+
+    // Shared pagination helper
+    function renderPagination(prefix, totalPages, page) {
+        var phtml = '';
+        phtml += '<li class="page-item ' + (page <= 1 ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (page - 1) + '">上一页</a></li>';
+        var pages = [], maxVisible = 5;
+        var sp = Math.max(1, page - Math.floor(maxVisible / 2));
+        var ep = Math.min(totalPages, sp + maxVisible - 1);
+        if (ep - sp < maxVisible - 1) sp = Math.max(1, ep - maxVisible + 1);
+        if (sp > 1) { pages.push(1); if (sp > 2) pages.push('...'); }
+        for (var i = sp; i <= ep; i++) pages.push(i);
+        if (ep < totalPages) { if (ep < totalPages - 1) pages.push('...'); pages.push(totalPages); }
+        pages.forEach(function(p) {
+            if (p === '...') { phtml += '<li class="page-item disabled"><span class="page-link">...</span></li>'; }
+            else { phtml += '<li class="page-item ' + (p === page ? 'active' : '') + '"><a class="page-link" href="#" data-page="' + p + '">' + p + '</a></li>'; }
+        });
+        phtml += '<li class="page-item ' + (page >= totalPages ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (page + 1) + '">下一页</a></li>';
+        $('#' + prefix + '-pagination').html(phtml);
+    }
+
+    $(document).on('click', '#course-pagination .page-link', function(e) {
+        e.preventDefault();
+        var p = parseInt($(this).data('page'));
+        var totalPages = Math.ceil(allCourses.length / coursePageSize) || 1;
+        if (p >= 1 && p <= totalPages) { coursePage = p; renderCoursePage(); }
+    });
+    $('#course-jump-page').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        var totalPages = Math.ceil(allCourses.length / coursePageSize) || 1;
+        var v = parseInt(this.value);
+        if (v > totalPages) this.value = totalPages;
+    }).on('keypress', function(e) {
+        if (e.which === 13) {
+            var totalPages = Math.ceil(allCourses.length / coursePageSize) || 1;
+            var p = parseInt($(this).val()) || 1;
+            if (p >= 1 && p <= totalPages) { coursePage = p; renderCoursePage(); }
+            $(this).val('');
+        }
+    });
+});
+</script>
+{% endblock %}

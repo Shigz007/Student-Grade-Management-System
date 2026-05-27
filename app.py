@@ -43,6 +43,21 @@ def admin_teachers():
     return render_template('admin/teachers.html')
 
 
+@app.route('/admin/schedules')
+def admin_schedules():
+    return render_template('admin/schedules.html')
+
+
+@app.route('/admin/courses')
+def admin_courses():
+    return render_template('admin/courses.html')
+
+
+@app.route('/teacher/schedules')
+def teacher_schedules():
+    return render_template('teacher/schedules.html')
+
+
 # === Teacher ===
 @app.route('/teacher')
 def teacher_dashboard():

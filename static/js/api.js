@@ -32,6 +32,7 @@ var api = {
     addStudent: function(data) { return this.post('/api/students', data); },
     updateStudent: function(id, data) { return this.put('/api/students/' + id, data); },
     deleteStudent: function(id) { return this.del('/api/students/' + id); },
+    getMyInfo: function() { return this.get('/api/students/me'); },
 
     // Grades
     getGrades: function(params) { return this.get('/api/grades', params); },
@@ -41,8 +42,17 @@ var api = {
 
     // Courses & Colleges
     getCourses: function(params) { return this.get('/api/courses', params); },
+    addCourse: function(data) { return this.post('/api/courses', data); },
+    updateCourse: function(id, data) { return this.put('/api/courses/' + id, data); },
+    deleteCourse: function(id) { return this.del('/api/courses/' + id); },
     getColleges: function() { return this.get('/api/colleges'); },
+    addCollege: function(data) { return this.post('/api/colleges', data); },
+    updateCollege: function(code, data) { return this.put('/api/colleges/' + code, data); },
+    deleteCollege: function(code) { return this.del('/api/colleges/' + code); },
     getMajors: function(params) { return this.get('/api/majors', params); },
+    addMajor: function(data) { return this.post('/api/majors', data); },
+    updateMajor: function(id, data) { return this.put('/api/majors/' + id, data); },
+    deleteMajor: function(id) { return this.del('/api/majors/' + id); },
     getNextStudentNo: function(params) { return this.get('/api/students/next-no', params); },
     getClasses: function(params) { return this.get('/api/students/classes', params); },
 
@@ -57,7 +67,14 @@ var api = {
     updateProfile: function(data) { return this.put('/api/me', data); },
     changePassword: function(data) { return this.put('/api/me/password', data); },
 
+    // Schedules
+    getSchedules: function(params) { return this.get('/api/schedules', params); },
+    saveSchedules: function(data) { return this.put('/api/schedules', data); },
+    getScheduleClasses: function() { return this.get('/api/schedules/classes'); },
+
     // Stats & Years
     getStats: function(params) { return this.get('/api/grades/stats', params); },
-    getYears: function() { return this.get('/api/grades/years'); }
+    getYears: function() { return this.get('/api/grades/years'); },
+    exportGrades: function(params) { return this.get('/api/grades/export', params); },
+    exportStudents: function(params) { return this.get('/api/students/export', params); }
 };

@@ -14,6 +14,19 @@ function showToast(message, type) {
     setTimeout(function() { $toast.alert('close'); }, 3500);
 }
 
+function downloadCSV(promise, filename) {
+    promise.then(function(csvText) {
+        var blob = new Blob(['﻿' + csvText], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('导出成功', 'success');
+    }).fail(function() { showToast('导出失败', 'danger'); });
+}
+
 function checkAuth() {
     var token = localStorage.getItem('token');
     if (!token) {
@@ -46,7 +59,6 @@ function checkAuth() {
         $('#profile-username').val(u.username);
         $('#profile-role').val(u.role === 'admin' ? '管理员' : u.role === 'teacher' ? '教师' : '学生');
         $('#profile-old-pw, #profile-new-pw, #profile-confirm-pw').val('');
-        $('#profile-modal .field-error').text('');
         $('#profile-modal').modal('show');
     }
     $('#user-display').off('click').on('click', openProfile);
@@ -58,6 +70,8 @@ function checkAuth() {
     if (path === rolePrefix + '/students') $('#nav-students').addClass('active');
     if (path === rolePrefix + '/grades') $('#nav-grades').addClass('active');
     if (path === rolePrefix + '/teachers') $('#nav-teachers').addClass('active');
+    if (path === rolePrefix + '/schedules') $('#nav-schedules').addClass('active');
+    if (path === rolePrefix + '/courses') $('#nav-courses').addClass('active');
 
     // Page title
     var titles = {};
@@ -65,6 +79,8 @@ function checkAuth() {
     titles[rolePrefix + '/students'] = '学生管理';
     titles[rolePrefix + '/grades'] = '成绩管理';
     titles[rolePrefix + '/teachers'] = '教师管理';
+    titles[rolePrefix + '/schedules'] = '课程表';
+    titles[rolePrefix + '/courses'] = '课程管理';
     $('#page-title').text(titles[path] || '');
 
     return true;
@@ -87,19 +103,17 @@ $(function() {
         var changingPw = oldPw || newPw || confirmPw;
         var changingName = newName !== user.username;
 
-        $('#profile-modal .field-error').text('');
-
         if (!changingName && !changingPw) { showToast('保存成功', 'success'); $('#profile-modal').modal('hide'); return; }
         if (!newName) { showToast('用户名不能为空', 'warning'); return; }
 
         var ok = true;
         var errors = [];
         if (changingPw) {
-            if (!oldPw) { $('#err-old-pw').text('请输入原密码'); errors.push('请输入原密码'); ok = false; }
-            if (!newPw) { $('#err-new-pw').text('请输入新密码'); errors.push('请输入新密码'); ok = false; }
-            if (!confirmPw) { $('#err-confirm-pw').text('请确认新密码'); errors.push('请确认新密码'); ok = false; }
-            if (newPw && newPw.length < 6) { $('#err-new-pw').text('新密码至少6位'); errors.push('新密码至少6位'); ok = false; }
-            if (newPw && confirmPw && newPw !== confirmPw) { $('#err-confirm-pw').text('两次密码不一致'); showToast('两次密码不一致', 'danger'); return; }
+            if (!oldPw) { errors.push('请输入原密码'); ok = false; }
+            if (!newPw) { errors.push('请输入新密码'); ok = false; }
+            if (!confirmPw) { errors.push('请确认新密码'); ok = false; }
+            if (newPw && newPw.length < 6) { errors.push('新密码至少6位'); ok = false; }
+            if (newPw && confirmPw && newPw !== confirmPw) { showToast('两次密码不一致', 'danger'); return; }
         }
         if (!ok) { showToast(errors.join('；'), 'warning'); return; }
 

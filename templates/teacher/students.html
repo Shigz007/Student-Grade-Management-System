@@ -4,11 +4,14 @@
     <div class="card-header"><h6 class="heading h6 mb-0">学生筛选</h6></div>
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 280px;">
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 260px;">
                 <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
                 <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索学号/姓名...">
             </div>
-            <button class="btn btn-sm btn-primary mb-2" id="btn-add-student"><i class="fas fa-plus mr-1"></i>新增学生</button>
+            <div class="d-flex align-items-center flex-wrap">
+                <button class="btn btn-sm btn-outline-primary mb-2 mr-2" id="btn-export-students"><i class="fas fa-download mr-1"></i>导出</button>
+                <button class="btn btn-sm btn-primary mb-2" id="btn-add-student"><i class="fas fa-plus mr-1"></i>新增学生</button>
+            </div>
         </div>
     </div>
 </div>
@@ -53,16 +56,16 @@
                 <input type="hidden" id="edit-student-id">
                 <div class="form-row">
                     <div class="form-group col-md-6"><label class="form-control-label">入学年份</label><input type="text" class="form-control" id="form-enrollment-year" readonly></div>
-                    <div class="form-group col-md-6"><label class="form-control-label">学院 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-college"></small></label><select class="form-control" id="form-college"><option value="">请选择</option></select></div>
+                    <div class="form-group col-md-6"><label class="form-control-label">学院 <span class="text-danger">*</span></label><select class="form-control" id="form-college"><option value="">请选择</option></select></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-6"><label class="form-control-label">专业 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-major"></small></label><select class="form-control" id="form-major" disabled><option value="">请先选择学院</option></select></div>
+                    <div class="form-group col-md-6"><label class="form-control-label">专业 <span class="text-danger">*</span></label><select class="form-control" id="form-major" disabled><option value="">请先选择学院</option></select></div>
                     <div class="form-group col-md-6"><label class="form-control-label">班级序号 <span class="text-danger">*</span></label><select class="form-control" id="form-class-seq" disabled><option value="">先选专业</option></select></div>
                 </div>
                 <div class="form-group"><label class="form-control-label">学号 <small class="text-muted">（自动生成）</small></label><input type="text" class="form-control" id="form-student-no" readonly required></div>
-                <div class="form-group"><label class="form-control-label">姓名 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-name"></small></label><input type="text" class="form-control" id="form-name" required></div>
-                <div class="form-group"><label class="form-control-label">性别 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-gender"></small></label><select class="form-control" id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
-                <div class="form-group"><label class="form-control-label">电话 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-phone"></small></label><input type="text" class="form-control" id="form-phone" required></div>
+                <div class="form-group"><label class="form-control-label">姓名 <span class="text-danger">*</span></label><input type="text" class="form-control" id="form-name" required></div>
+                <div class="form-group"><label class="form-control-label">性别 <span class="text-danger">*</span></label><select class="form-control" id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div>
+                <div class="form-group"><label class="form-control-label">电话 <span class="text-danger">*</span></label><input type="text" class="form-control" id="form-phone" required></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-student">保存</button></div>
         </div>
@@ -111,12 +114,16 @@ $(function() {
 
     $('#form-class-seq').on('change', refreshStudentNo);
 
+    $('#btn-export-students').click(function() {
+        downloadCSV(api.exportStudents({}), 'students.csv');
+    });
+
     $('#btn-add-student').click(function() {
         $('#edit-student-id').val(''); $('#student-modal-title').text('新增学生');
         $('#form-name,#form-gender,#form-phone').val(''); $('#form-college').val('');
         $('#form-enrollment-year').val(new Date().getFullYear());
         $('#form-major').html('<option value="">请先选择学院</option>').prop('disabled', true);
-        resetClassSelect(); $('.field-error').text('');
+        resetClassSelect();
         $('#student-modal').modal('show');
     });
 
@@ -128,15 +135,15 @@ $(function() {
             college_code: $('#form-college').val(), major_code: $('#form-major').val(),
             class_name: '', phone: $('#form-phone').val().trim(), email: ''
         };
-        $('.field-error').text('');
         var ok = true;
-        if (!data.student_no) { showToast('请选择班级以自动生成学号', 'warning'); ok = false; }
-        if (!data.name) { $('#err-name').text('请输入姓名'); ok = false; }
-        if (!data.gender) { $('#err-gender').text('请选择性别'); ok = false; }
-        if (!data.college_code) { $('#err-college').text('请选择学院'); ok = false; }
-        if (!data.major_code) { $('#err-major').text('请选择专业'); ok = false; }
-        if (!data.phone) { $('#err-phone').text('请输入电话'); ok = false; }
-        if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
+        var missing = [];
+        if (!data.student_no) { missing.push('班级'); ok = false; }
+        if (!data.name) { missing.push('姓名'); ok = false; }
+        if (!data.gender) { missing.push('性别'); ok = false; }
+        if (!data.college_code) { missing.push('学院'); ok = false; }
+        if (!data.major_code) { missing.push('专业'); ok = false; }
+        if (!data.phone) { missing.push('电话'); ok = false; }
+        if (!ok) { showToast('请填写' + missing.join('、'), 'warning'); return; }
         if (id) { api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); showToast('修改成功', 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '修改失败'; showToast(m, 'danger'); }); }
         else { api.addStudent(data).then(function(res) { $('#student-modal').modal('hide'); loadStudents(); showToast(res.message, 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '添加失败'; showToast(m, 'danger'); }); }
     });

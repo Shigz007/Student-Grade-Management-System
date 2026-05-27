@@ -41,3 +41,15 @@ CREATE TABLE IF NOT EXISTS teacher_classes (
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE(user_id, college_code, major_code, class_name)
 );
+
+CREATE TABLE IF NOT EXISTS schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    college_code TEXT NOT NULL,
+    major_code TEXT NOT NULL,
+    class_name TEXT NOT NULL,
+    day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 1 AND 5),
+    time_slot INTEGER NOT NULL CHECK (time_slot BETWEEN 1 AND 6),
+    course_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(college_code, major_code, class_name, day_of_week, time_slot)
+);

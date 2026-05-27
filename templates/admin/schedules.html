@@ -1,0 +1,228 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<style>
+    #schedule-table td:last-child,
+    #schedule-table th:last-child {
+        position: static !important;
+        right: auto !important;
+        box-shadow: none !important;
+        z-index: auto !important;
+        padding-right: 0.75rem !important;
+    }
+</style>
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">课表添加</h6></div>
+    <div class="card-body">
+        <div class="d-flex align-items-center flex-wrap">
+            <div class="mr-2 mb-2"><label class="form-control-label small text-muted">学院</label><select class="form-control form-control-sm" id="filter-college"><option value="">选择学院</option></select></div>
+            <div class="mr-2 mb-2"><label class="form-control-label small text-muted">专业</label><select class="form-control form-control-sm" id="filter-major" disabled><option value="">先选学院</option></select></div>
+            <div class="mr-2 mb-2"><label class="form-control-label small text-muted">班级</label><select class="form-control form-control-sm" id="filter-class" disabled><option value="">先选专业</option></select></div>
+        </div>
+    </div>
+</div>
+
+<div class="card z-depth-1" id="schedule-card" style="display:none;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="heading h6 mb-0" id="schedule-title">课程表</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-bordered mb-0" id="schedule-table">
+            <thead>
+                <tr>
+                    <th class="text-center bg-light" style="width:120px;">时间</th>
+                    <th class="text-center bg-light">周一</th>
+                    <th class="text-center bg-light">周二</th>
+                    <th class="text-center bg-light">周三</th>
+                    <th class="text-center bg-light">周四</th>
+                    <th class="text-center bg-light">周五</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-grid"></tbody>
+        </table>
+        </div>
+        <div class="d-flex justify-content-end align-items-center px-3 py-2 border-top">
+            <button class="btn btn-sm btn-outline-secondary mr-2" id="btn-reset-schedule"><i class="fas fa-redo mr-1"></i>重置</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-schedule"><i class="fas fa-save mr-1"></i>保存课表</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="schedule-edit-modal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header"><h6 class="modal-title heading h6 mb-0">编辑课程</h6><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-control-label">课程</label><select class="form-control form-control-sm" id="edit-course"></select></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-outline-danger mr-auto" id="btn-clear-cell">清空</button>
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btn-confirm-cell">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    checkAuth();
+
+    var TIME_SLOTS = [
+        '08:30-10:05',
+        '10:25-12:00',
+        '13:30-15:05',
+        '15:25-17:00',
+        '17:10-18:45',
+        '19:00-20:25'
+    ];
+
+    var DAY_LABELS = ['周一', '周二', '周三', '周四', '周五'];
+
+    var scheduleData = {};       // {day: {slot: {course_id, course_name}}}
+    var currentCollege = '';
+    var currentMajor = '';
+    var currentClass = '';
+    var editingDay = 0;
+    var editingSlot = 0;
+    var allCourses = [];
+
+    // Init college dropdown
+    api.getColleges().then(function(colleges) {
+        var html = '<option value="">选择学院</option>';
+        colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; });
+        $('#filter-college').html(html);
+    });
+
+    // Cascade: college → major
+    $('#filter-college').on('change', function() {
+        var college = $(this).val();
+        var $major = $('#filter-major');
+        $('#filter-class').html('<option value="">先选专业</option>').prop('disabled', true);
+        if (!college) { $major.html('<option value="">先选学院</option>').prop('disabled', true); return; }
+        api.getMajors({college_code: college}).then(function(majors) {
+            $major.prop('disabled', false).html('<option value="">选择专业</option>');
+            majors.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
+        });
+    });
+
+    // Cascade: major → class
+    $('#filter-major').on('change', function() {
+        var college = $('#filter-college').val();
+        var major = $(this).val();
+        var $cls = $('#filter-class');
+        if (!college || !major) { $cls.html('<option value="">先选专业</option>').prop('disabled', true); return; }
+        api.getClasses({year: '2024', college: college, major: major}).then(function(classes) {
+            $cls.prop('disabled', false).html('<option value="">选择班级</option>');
+            classes.forEach(function(c) { $cls.append('<option value="' + c.class_seq + '">' + c.class_seq + '班 (' + c.count + '人)</option>'); });
+        });
+    });
+
+    // Load schedule on class select
+    $('#filter-class').on('change', function() {
+        currentCollege = $('#filter-college').val();
+        currentMajor = $('#filter-major').val();
+        currentClass = $('#filter-class').val();
+        if (!currentCollege || !currentMajor || !currentClass) return;
+        var collegeName = $('#filter-college option:selected').text();
+        var majorName = $('#filter-major option:selected').text();
+        $('#schedule-title').text(collegeName + ' - ' + majorName + ' - ' + currentClass + '班 课程表');
+
+        // Load courses for this college
+        api.getCourses({college_code: currentCollege}).then(function(courses) {
+            allCourses = courses;
+            var courseHtml = '<option value="">选择课程</option>';
+            courses.forEach(function(c) { courseHtml += '<option value="' + c.id + '">' + c.name + ' (' + c.code + ')</option>'; });
+            $('#edit-course').html(courseHtml);
+
+            // Load existing schedule
+            api.getSchedules({college_code: currentCollege, major_code: currentMajor, class_name: currentClass}).then(function(entries) {
+                scheduleData = {};
+                for (var d = 1; d <= 5; d++) { scheduleData[d] = {}; }
+                entries.forEach(function(e) {
+                    scheduleData[e.day_of_week][e.time_slot] = { course_id: e.course_id, course_name: e.course_name };
+                });
+                renderGrid();
+                $('#schedule-card').show();
+            });
+        });
+    });
+
+    function renderGrid() {
+        var html = '';
+        for (var s = 0; s < 6; s++) {
+            html += '<tr>';
+            html += '<td class="text-center bg-light align-middle text-sm">' + TIME_SLOTS[s] + '</td>';
+            for (var d = 1; d <= 5; d++) {
+                var entry = scheduleData[d] && scheduleData[d][s + 1];
+                if (entry) {
+                    html += '<td class="text-center p-1"><button class="btn btn-sm btn-primary btn-block btn-schedule-cell" data-day="' + d + '" data-slot="' + (s + 1) + '">' + entry.course_name + '</button></td>';
+                } else {
+                    html += '<td class="text-center p-1"><button class="btn btn-sm btn-outline-secondary btn-block btn-schedule-cell" data-day="' + d + '" data-slot="' + (s + 1) + '">+</button></td>';
+                }
+            }
+            html += '</tr>';
+        }
+        $('#schedule-grid').html(html);
+    }
+
+    // Click cell to edit
+    $(document).on('click', '.btn-schedule-cell', function() {
+        editingDay = parseInt($(this).data('day'));
+        editingSlot = parseInt($(this).data('slot'));
+        var entry = scheduleData[editingDay] && scheduleData[editingDay][editingSlot];
+        $('#edit-course').val(entry ? entry.course_id : '');
+        $('#schedule-edit-modal').modal('show');
+    });
+
+    // Confirm cell edit
+    $('#btn-confirm-cell').click(function() {
+        var courseId = $('#edit-course').val();
+        if (courseId) {
+            var courseName = $('#edit-course option:selected').text();
+            if (!scheduleData[editingDay]) scheduleData[editingDay] = {};
+            scheduleData[editingDay][editingSlot] = { course_id: parseInt(courseId), course_name: courseName };
+        } else {
+            delete scheduleData[editingDay][editingSlot];
+        }
+        $('#schedule-edit-modal').modal('hide');
+        renderGrid();
+    });
+
+    // Clear cell
+    $('#btn-clear-cell').click(function() {
+        $('#edit-course').val('');
+    });
+
+    // Save
+    $('#btn-save-schedule').click(function() {
+        var entries = [];
+        for (var d = 1; d <= 5; d++) {
+            if (!scheduleData[d]) continue;
+            for (var s = 1; s <= 6; s++) {
+                if (scheduleData[d][s]) {
+                    entries.push({ day_of_week: d, time_slot: s, course_id: scheduleData[d][s].course_id });
+                }
+            }
+        }
+        api.saveSchedules({
+            college_code: currentCollege,
+            major_code: currentMajor,
+            class_name: currentClass,
+            entries: entries
+        }).then(function(res) {
+            showToast(res.message || '保存成功', 'success');
+        }).fail(function(xhr) {
+            showToast((xhr.responseJSON && xhr.responseJSON.error) || '保存失败', 'danger');
+        });
+    });
+
+    // Reset
+    $('#btn-reset-schedule').click(function() {
+        if (!confirm('确定重置当前课表？未保存的修改将丢失。')) return;
+        for (var d = 1; d <= 5; d++) { scheduleData[d] = {}; }
+        renderGrid();
+    });
+});
+</script>
+{% endblock %}

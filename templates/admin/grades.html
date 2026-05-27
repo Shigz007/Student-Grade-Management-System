@@ -58,7 +58,7 @@
     <div class="card-body p-0">
         <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>学号</th><th>学生</th><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>操作</th></tr></thead>
+            <thead><tr><th>学号</th><th>学生</th><th>课程</th><th>成绩</th><th>专业</th><th>学院</th><th>学期</th><th>操作</th></tr></thead>
             <tbody id="grade-table"></tbody>
         </table>
         </div>
@@ -80,22 +80,34 @@
             <div class="modal-header"><h5 class="modal-title" id="grade-modal-title">录入成绩</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
             <div class="modal-body">
                 <input type="hidden" id="edit-grade-id">
-                <div class="form-group"><label class="form-control-label">学生 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-student"></small></label>
-                    <div class="input-group input-group-transparent mb-2">
-                        <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
-                        <input type="text" class="form-control form-control-sm" id="form-student-search" placeholder="输入姓名或学号搜索学生...">
+                <div class="form-group"><label class="form-control-label">学生 <span class="text-danger required-star">*</span> <small class="text-danger field-error" id="err-student"></small></label>
+                    <div id="student-select-area">
+                        <div class="input-group input-group-transparent mb-2">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                            <input type="text" class="form-control form-control-sm" id="form-student-search" placeholder="输入姓名或学号搜索学生...">
+                        </div>
+                        <select class="form-control" id="form-grade-student" size="6" required></select>
                     </div>
-                    <select class="form-control" id="form-grade-student" size="6" required></select>
+                    <input type="text" class="form-control" id="form-grade-student-display" readonly style="display:none;">
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-4"><label class="form-control-label">学院</label><input type="text" class="form-control" id="form-grade-college" readonly placeholder="自动填充"></div>
-                    <div class="form-group col-md-4"><label class="form-control-label">专业</label><input type="text" class="form-control" id="form-grade-major" readonly placeholder="自动填充"></div>
-                    <div class="form-group col-md-4"><label class="form-control-label">课程 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-course"></small></label><select class="form-control" id="form-grade-course" disabled required><option value="">请选择课程</option></select></div>
+                    <div class="form-group col-md-4"><label class="form-control-label">学院</label><input type="text" class="form-control" id="form-grade-college" readonly></div>
+                    <div class="form-group col-md-4"><label class="form-control-label">专业</label><input type="text" class="form-control" id="form-grade-major" readonly></div>
+                    <div class="form-group col-md-4"><label class="form-control-label">课程 <span class="text-danger required-star">*</span> <small class="text-danger field-error" id="err-course"></small></label>
+                        <select class="form-control" id="form-grade-course" disabled required><option value="">请选择课程</option></select>
+                        <input type="text" class="form-control" id="form-grade-course-display" readonly style="display:none;">
+                    </div>
                 </div>
                 <div class="form-group"><label class="form-control-label">成绩 (0-100) <span class="text-danger">*</span> <small class="text-danger field-error" id="err-score"></small></label><input type="number" class="form-control" id="form-score" min="0" max="100" step="0.5" required oninput="if(this.value>100)this.value=100;if(this.value<0)this.value=0"></div>
                 <div class="form-row">
-                    <div class="form-group col-md-6"><label class="form-control-label">学年 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-year"></small></label><select class="form-control" id="form-year" required></select></div>
-                    <div class="form-group col-md-6"><label class="form-control-label">学期 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-term"></small></label><select class="form-control" id="form-term" required><option value="">请选择</option><option value="一">第一学期</option><option value="二">第二学期</option></select></div>
+                    <div class="form-group col-md-6"><label class="form-control-label">学年 <span class="text-danger required-star">*</span> <small class="text-danger field-error" id="err-year"></small></label>
+                        <select class="form-control" id="form-year" required></select>
+                        <input type="text" class="form-control" id="form-year-display" readonly style="display:none;">
+                    </div>
+                    <div class="form-group col-md-6"><label class="form-control-label">学期 <span class="text-danger required-star">*</span> <small class="text-danger field-error" id="err-term"></small></label>
+                        <select class="form-control" id="form-term" required><option value="">请选择</option><option value="一">第一学期</option><option value="二">第二学期</option></select>
+                        <input type="text" class="form-control" id="form-term-display" readonly style="display:none;">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-grade">保存</button></div>
@@ -122,9 +134,17 @@ $(function() {
         $('#form-score').val(''); $('#form-term').val('');
         confirmedStudentId = null; confirmedStudentText = '';
         $('#form-grade-college').val(''); $('#form-grade-major').val('');
-        $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>');
-        $('#form-student-search').val('').trigger('input');
-        $('#form-grade-student').val(''); $('#form-year').val('');
+        $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>').show();
+        $('#form-grade-course-display').hide();
+        $('#student-select-area').show();
+        $('#form-grade-student-display').hide();
+        $('#form-student-search').val('').trigger('input').prop('readonly', false);
+        $('#form-grade-student').val('').prop('disabled', false);
+        $('#form-year').val('').prop('disabled', false).show();
+        $('#form-year-display').hide();
+        $('#form-term').prop('disabled', false).show();
+        $('#form-term-display').hide();
+        $('.required-star').show();
         $('.field-error').text('');
         $('#grade-modal').modal('show');
     });
@@ -158,22 +178,27 @@ $(function() {
             if (g) {
                 $('#edit-grade-id').val(g.id);
                 $('#grade-modal-title').text('编辑成绩');
+                $('#student-select-area').hide();
+                $('#form-grade-student-display').show().val(g.student_no + ' ' + g.student_name);
                 $('#form-grade-student').val(g.student_id);
-                $('#form-student-search').val(g.student_no + ' ' + g.student_name);
                 $('#form-grade-college').val(collegeNames[g.college_code] || g.college_code || '');
+                $('#form-grade-course').html('<option value="' + g.course_id + '">' + (g.course_name || '') + '</option>').hide();
+                $('#form-grade-course-display').show().val(g.course_name || '');
+                $('.required-star').hide();
                 $('#form-score').val(g.score);
-                $('#form-term').val(g.semester_term || '');
+                $('#form-year').prop('disabled', true).hide().val(g.semester_year || '');
+                $('#form-year-display').show().val(g.semester_year || '');
+                $('#form-term').prop('disabled', true).hide().val(g.semester_term || '');
+                $('#form-term-display').show().val(g.semester_term ? '第' + g.semester_term + '学期' : '');
                 var editStudent = allStudents.find(function(s) { return s.id == g.student_id; });
                 if (editStudent) {
                     var majorName = majorNames[editStudent.college_code + '_' + editStudent.major_code] || editStudent.major_code || '';
                     $('#form-grade-major').val(majorName);
                     populateFormYears(editStudent.enrollment_year);
                     $('#form-year').val(g.semester_year || '');
-                    populateFormCourses(editStudent.college_code, editStudent.major_code, g.course_id);
                 } else {
                     populateFormYears(new Date().getFullYear());
                     $('#form-year').val(g.semester_year || '');
-                    populateFormCourses(g.college_code || '', '', g.course_id);
                 }
                 $('.field-error').text('');
                 $('#grade-modal').modal('show');
@@ -203,13 +228,16 @@ $(function() {
         });
     }
 
-    function populateFormCourses(collegeCode, majorCode, selectedCourseId) {
-        if (!collegeCode || !majorCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
-        api.getCourses({ college_code: collegeCode, major_code: majorCode }).then(function(courses) {
+    function populateFormCourses(collegeCode, majorCode, selectedCourseId, keepDisabled) {
+        if (!collegeCode) { $('#form-grade-course').prop('disabled', true).html('<option value="">请选择课程</option>'); return; }
+        var params = { college_code: collegeCode };
+        if (majorCode) params.major_code = majorCode;
+        api.getCourses(params).then(function(courses) {
             var html = '<option value="">请选择课程</option>';
             courses.forEach(function(c) { html += '<option value="' + c.id + '">' + c.name + '</option>'; });
-            $('#form-grade-course').html(html).prop('disabled', false);
-            if (selectedCourseId) $('#form-grade-course').val(selectedCourseId);
+            $('#form-grade-course').html(html).prop('disabled', !!keepDisabled);
+            if (selectedCourseId) { $('#form-grade-course').val(selectedCourseId); }
+            else if (courses.length === 1) { $('#form-grade-course').val(courses[0].id); }
         });
     }
 
@@ -321,7 +349,7 @@ $(function() {
                 $('#form-grade-college').val(collegeNames[student.college_code] || student.college_code);
                 var majorName = majorNames[student.college_code + '_' + student.major_code] || student.major_code || '';
                 $('#form-grade-major').val(majorName);
-                if (student.major_code) { populateFormCourses(student.college_code, student.major_code); }
+                populateFormCourses(student.college_code, student.major_code);
                 populateFormYears(student.enrollment_year);
             }
         }
@@ -390,12 +418,13 @@ $(function() {
         pageGrades.forEach(function(g) {
             var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
             var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
-            html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td>';
+            html += '<tr><td>' + (g.student_no || '') + '</td><td>' + g.student_name + '</td><td>' + g.course_name + '</td>';
             html += '<td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td>';
+            html += '<td>' + (g.major_name || '') + '</td><td>' + (g.college_name || '') + '</td>';
             html += '<td><small>' + (sem || '-') + '</small></td>';
             html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-grade" data-id="' + g.id + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-grade" data-id="' + g.id + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
         });
-        $('#grade-table').html(html || '<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>');
+        $('#grade-table').html(html || '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
         var end = Math.min(start + gradePageSize, total);
         $('#grade-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
         var phtml = '';

@@ -15,17 +15,17 @@
         <div class="card stat-card bg-success text-white z-depth-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div><div class="stat-value" id="stat-avg">0</div><div class="stat-label">全校平均分</div></div>
+                    <div><div class="stat-value" id="stat-avg">0</div><div class="stat-label">平均分</div></div>
                     <div style="font-size:2rem;opacity:0.5;"><i class="fas fa-chart-bar"></i></div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card bg-info text-white z-depth-1">
+        <div class="card stat-card bg-primary text-white z-depth-1">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div><div class="stat-value" id="stat-pass">0%</div><div class="stat-label">全校及格率</div></div>
+                    <div><div class="stat-value" id="stat-pass">0%</div><div class="stat-label">及格率</div></div>
                     <div style="font-size:2rem;opacity:0.5;"><i class="fas fa-check-circle"></i></div>
                 </div>
             </div>
@@ -50,7 +50,7 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                 <table class="table table-hover mb-0 recent-table">
-                    <thead><tr><th style="width:25%">学生</th><th style="width:35%">课程</th><th style="width:15%">成绩</th><th style="width:25%">学期</th></tr></thead>
+                    <thead><tr><th style="width:20%">学生</th><th style="width:28%">课程</th><th style="width:12%">成绩</th><th style="width:22%">专业</th><th style="width:18%">学期</th></tr></thead>
                     <tbody id="recent-grades"></tbody>
                 </table>
                 </div>
@@ -98,9 +98,9 @@ $(function() {
         grades.slice(0, 8).forEach(function(g) {
             var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
             var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
-            html += '<tr><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td><small>' + (sem || '-') + '</small></td></tr>';
+            html += '<tr><td>' + g.student_name + '</td><td>' + g.course_name + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td>' + (g.major_name || '') + '</td><td><small>' + (sem || '-') + '</small></td></tr>';
         });
-        $('#recent-grades').html(html || '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>');
+        $('#recent-grades').html(html || '<tr><td colspan="5" class="text-center text-muted">暂无数据</td></tr>');
     });
 });
 </script>

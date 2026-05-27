@@ -30,3 +30,14 @@ CREATE TABLE IF NOT EXISTS grades (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(id)
 );
+
+CREATE TABLE IF NOT EXISTS teacher_classes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    college_code TEXT NOT NULL,
+    major_code TEXT NOT NULL,
+    class_name TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, college_code, major_code, class_name)
+);

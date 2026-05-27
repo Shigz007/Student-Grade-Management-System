@@ -1,0 +1,299 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="card z-depth-1 mb-4">
+    <div class="card-header"><h6 class="heading h6 mb-0">教师筛选</h6></div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="input-group input-group-transparent mr-2 mb-2" style="max-width: 280px;">
+                <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                <input type="text" class="form-control form-control-sm" id="search-input" placeholder="搜索用户名...">
+            </div>
+            <button class="btn btn-sm btn-primary mb-2" id="btn-add-teacher"><i class="fas fa-plus mr-1"></i>添加教师</button>
+        </div>
+    </div>
+</div>
+
+<div class="card z-depth-1">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="heading h6 mb-0">教师列表</h6>
+        <div class="d-flex align-items-center">
+            <small class="text-muted mr-2">每页</small>
+            <select class="form-control form-control-sm" style="width:72px" id="teacher-page-size">
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+            </select>
+            <small class="text-muted ml-2">条</small>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>用户名</th><th>分配班级</th><th>操作</th></tr></thead>
+            <tbody id="teacher-table"></tbody>
+        </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap px-3 py-2 border-top">
+            <small class="text-muted mb-1" id="teacher-page-info"></small>
+            <div class="d-flex align-items-center mx-2 mb-1">
+                <small class="text-muted mr-1">跳至</small>
+                <input type="text" class="form-control form-control-sm page-jump-input" id="teacher-jump-page">
+                <small class="text-muted ml-1">页</small>
+            </div>
+            <nav><ul class="pagination pagination-sm mb-0 flex-wrap" id="teacher-pagination"></ul></nav>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="teacher-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title" id="teacher-modal-title">添加教师</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-teacher-user-id">
+                <div class="form-group"><label class="form-control-label">用户名 <span class="text-danger">*</span> <small class="text-danger field-error" id="err-teacher-username"></small></label><input type="text" class="form-control" id="form-teacher-username" required></div>
+                <div class="form-group">
+                    <label class="form-control-label">登录密码 <small class="text-danger field-error" id="err-teacher-password"></small></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="form-teacher-password" readonly>
+                        <div class="input-group-append"><button class="btn btn-outline-secondary btn-sm" type="button" id="btn-gen-password">生成新密码</button></div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label class="form-control-label">分配班级 <small class="text-muted" id="class-count-label">已分配 0/5 个班级</small></label>
+                    <div class="form-row mb-2">
+                        <div class="col"><select class="form-control form-control-sm" id="form-teacher-college"><option value="">选择学院</option></select></div>
+                        <div class="col"><select class="form-control form-control-sm" id="form-teacher-major" disabled><option value="">先选学院</option></select></div>
+                        <div class="col-3"><select class="form-control form-control-sm" id="form-teacher-class-seq" disabled><option value="">选择班级</option></select></div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary btn-block mb-2" type="button" id="btn-add-class"><i class="fas fa-plus mr-1"></i>添加班级</button>
+                    <div id="assigned-classes" class="d-flex flex-wrap"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="btn-save-teacher">保存</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(function() {
+    checkAuth();
+    initForm();
+    loadTeachers();
+
+    $('#search-input').on('input', loadTeachers);
+
+    function resetClassSelect() {
+        $('#form-teacher-class-seq').html('<option value="">选择班级</option>').prop('disabled', true);
+    }
+
+    function loadClassOptions() {
+        var college = $('#form-teacher-college').val();
+        var major = $('#form-teacher-major').val();
+        var $cls = $('#form-teacher-class-seq');
+        $cls.html('<option value="">选择班级</option>');
+        if (!college || !major) { $cls.prop('disabled', true); return; }
+        api.getClasses({ year: '2024', college: college, major: major }).then(function(classes) {
+            var assignedSeqs = assignedClasses.filter(function(c) { return c.college_code === college && c.major_code === major; }).map(function(c) { return c.class_name; });
+            var available = classes.filter(function(c) { return assignedSeqs.indexOf(c.class_seq) === -1; });
+            if (available.length === 0) { $cls.html('<option value="">无可用班级</option>').prop('disabled', true); return; }
+            $cls.prop('disabled', false);
+            available.forEach(function(c) { $cls.append('<option value="' + c.class_seq + '">' + c.class_seq + '班 (' + c.count + '人)</option>'); });
+        });
+    }
+
+    $('#form-teacher-college').on('change', function() {
+        var college = $(this).val();
+        var $major = $('#form-teacher-major');
+        $major.empty();
+        resetClassSelect();
+        if (!college) { $major.html('<option value="">先选学院</option>').prop('disabled', true); return; }
+        api.getMajors({college_code: college}).then(function(majors) {
+            $major.prop('disabled', false).append('<option value="">选择专业</option>');
+            majors.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
+        });
+    });
+
+    $('#form-teacher-major').on('change', loadClassOptions);
+
+    $('#btn-gen-password').click(function() {
+        $('#form-teacher-password').val('Tc' + Math.random().toString(36).slice(2, 8));
+    });
+
+    var assignedClasses = [];
+
+    function renderAssignedClasses() {
+        var html = '';
+        assignedClasses.forEach(function(cls, idx) {
+            html += '<span class="btn btn-sm btn-primary btn-block mb-1 text-center">' + cls.college_name + ' - ' + cls.major_name + ' - ' + cls.class_name + '班 <i class="fas fa-times ml-1" style="cursor:pointer" data-idx="' + idx + '"></i></span>';
+        });
+        $('#assigned-classes').html(html || '<small class="text-muted">暂未分配班级</small>');
+        $('#class-count-label').text('已分配 ' + assignedClasses.length + '/5 个班级');
+    }
+
+    $('#btn-add-class').click(function() {
+        if (assignedClasses.length >= 5) { showToast('每个教师最多分配5个班级', 'warning'); return; }
+        var college = $('#form-teacher-college').val();
+        var major = $('#form-teacher-major').val();
+        var classSeq = $('#form-teacher-class-seq').val();
+        if (!college || !major) { showToast('请选择学院和专业', 'warning'); return; }
+        if (!classSeq) { showToast('请选择班级', 'warning'); return; }
+        var collegeName = $('#form-teacher-college option:selected').text();
+        var majorName = $('#form-teacher-major option:selected').text();
+        var dup = assignedClasses.find(function(c) { return c.college_code === college && c.major_code === major && c.class_name === classSeq; });
+        if (dup) { showToast('该班级已分配', 'warning'); return; }
+        assignedClasses.push({ college_code: college, college_name: collegeName, major_code: major, major_name: majorName, class_name: classSeq });
+        renderAssignedClasses();
+        loadClassOptions();
+    });
+
+    $(document).on('click', '#assigned-classes .fa-times', function() {
+        assignedClasses.splice($(this).data('idx'), 1);
+        renderAssignedClasses();
+    });
+
+    $('#btn-add-teacher').click(function() {
+        $('#edit-teacher-user-id').val('');
+        $('#teacher-modal-title').text('添加教师');
+        $('#form-teacher-username').val('');
+        $('#form-teacher-password').val('Tc' + Math.random().toString(36).slice(2, 8)).attr('placeholder', '');
+        $('#form-teacher-college').val('');
+        $('#form-teacher-major').html('<option value="">先选学院</option>').prop('disabled', true);
+        resetClassSelect();
+        assignedClasses = [];
+        renderAssignedClasses();
+        $('.field-error').text('');
+        $('#teacher-modal').modal('show');
+    });
+
+    $('#btn-save-teacher').click(function() {
+        var userId = $('#edit-teacher-user-id').val();
+        var username = $('#form-teacher-username').val().trim();
+        var password = $('#form-teacher-password').val().trim();
+        $('.field-error').text('');
+        if (!username) { $('#err-teacher-username').text('请输入用户名'); showToast('请输入用户名', 'warning'); return; }
+        if (!userId && !password) { $('#err-teacher-password').text('请生成密码'); showToast('请生成密码', 'warning'); return; }
+
+        var data = {
+            username: username,
+            password: password,
+            classes: assignedClasses.map(function(c) { return { college_code: c.college_code, major_code: c.major_code, class_name: c.class_name }; })
+        };
+
+        if (userId) {
+            api.updateTeacher(userId, data).then(function() { $('#teacher-modal').modal('hide'); loadTeachers(); showToast('修改成功', 'success'); });
+        } else {
+            api.addTeacher(data).then(function(res) { $('#teacher-modal').modal('hide'); loadTeachers(); showToast(res.message, 'success'); });
+        }
+    });
+
+    $(document).on('click', '.btn-edit-teacher', function() {
+        var userId = parseInt($(this).data('id'));
+        var teacher = allTeachersData.find(function(t) { return t.user_id === userId; });
+        if (!teacher) return;
+        $('#edit-teacher-user-id').val(teacher.user_id);
+        $('#teacher-modal-title').text('编辑教师');
+        $('#form-teacher-username').val(teacher.username);
+        $('#form-teacher-password').val('').attr('placeholder', '留空则不修改密码');
+        $('#form-teacher-college').val('');
+        $('#form-teacher-major').html('<option value="">先选学院</option>').prop('disabled', true);
+        resetClassSelect();
+        assignedClasses = teacher.classes.map(function(c) { return { college_code: c.college_code, college_name: c.college_name, major_code: c.major_code, major_name: c.major_name, class_name: c.class_name }; });
+        renderAssignedClasses();
+        $('.field-error').text('');
+        $('#teacher-modal').modal('show');
+    });
+
+    $(document).on('click', '.btn-delete-teacher', function() {
+        if (!confirm('确定删除该教师账号吗？')) return;
+        api.deleteTeacher($(this).data('id')).then(function() { loadTeachers(); showToast('删除成功', 'success'); });
+    });
+
+    function initForm() {
+        api.getColleges().then(function(colleges) {
+            var html = '<option value="">选择学院</option>';
+            colleges.forEach(function(c) { html += '<option value="' + c.code + '">' + c.name + '</option>'; });
+            $('#form-teacher-college').html(html);
+        });
+    }
+
+    var allTeachersData = []; var teacherPage = 1; var teacherPageSize = 3;
+
+    function loadTeachers() {
+        var search = $('#search-input').val().trim();
+        api.getTeachers(search ? { search: search } : {}).then(function(teachers) {
+            allTeachersData = teachers;
+            teacherPage = 1;
+            renderTeachersPage();
+        });
+    }
+
+    function renderTeachersPage() {
+        var total = allTeachersData.length;
+        var totalPages = Math.ceil(total / teacherPageSize) || 1;
+        if (teacherPage > totalPages) teacherPage = totalPages;
+        var start = (teacherPage - 1) * teacherPageSize;
+        var pageData = allTeachersData.slice(start, start + teacherPageSize);
+        var html = '';
+        pageData.forEach(function(t) {
+            var classBadges = '';
+            if (t.classes && t.classes.length) {
+                t.classes.forEach(function(c) {
+                    classBadges += '<span class="btn btn-sm btn-primary btn-block mb-1 text-center">' + c.college_name + ' - ' + c.major_name + ' - ' + c.class_name + '班</span>';
+                });
+            } else {
+                classBadges = '<small class="text-muted">未分配</small>';
+            }
+            html += '<tr><td>' + t.username + '</td><td>' + classBadges + '</td>';
+            html += '<td><button class="btn btn-sm btn-success btn-action mr-1 btn-edit-teacher" data-id="' + t.user_id + '"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-sm btn-danger btn-action btn-delete-teacher" data-id="' + t.user_id + '"><i class="fas fa-trash-alt"></i></button></td></tr>';
+        });
+        $('#teacher-table').html(html || '<tr><td colspan="3" class="text-center text-muted">暂无数据</td></tr>');
+        var end = Math.min(start + teacherPageSize, total);
+        $('#teacher-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
+        var phtml = '';
+        phtml += '<li class="page-item ' + (teacherPage <= 1 ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (teacherPage - 1) + '">上一页</a></li>';
+        var pages = []; var maxVisible = 5;
+        var sp = Math.max(1, teacherPage - Math.floor(maxVisible / 2));
+        var ep = Math.min(totalPages, sp + maxVisible - 1);
+        if (ep - sp < maxVisible - 1) sp = Math.max(1, ep - maxVisible + 1);
+        if (sp > 1) { pages.push(1); if (sp > 2) pages.push('...'); }
+        for (var i = sp; i <= ep; i++) pages.push(i);
+        if (ep < totalPages) { if (ep < totalPages - 1) pages.push('...'); pages.push(totalPages); }
+        pages.forEach(function(p) {
+            if (p === '...') { phtml += '<li class="page-item disabled"><span class="page-link">...</span></li>'; }
+            else { phtml += '<li class="page-item ' + (p === teacherPage ? 'active' : '') + '"><a class="page-link" href="#" data-page="' + p + '">' + p + '</a></li>'; }
+        });
+        phtml += '<li class="page-item ' + (teacherPage >= totalPages ? 'disabled' : '') + '"><a class="page-link" href="#" data-page="' + (teacherPage + 1) + '">下一页</a></li>';
+        $('#teacher-pagination').html(phtml);
+    }
+
+    $('#teacher-page-size').on('change', function() {
+        teacherPageSize = parseInt($(this).val());
+        teacherPage = 1;
+        renderTeachersPage();
+    });
+
+    $(document).on('click', '#teacher-pagination .page-link', function(e) {
+        e.preventDefault();
+        var p = parseInt($(this).data('page'));
+        var totalPages = Math.ceil(allTeachersData.length / teacherPageSize) || 1;
+        if (p >= 1 && p <= totalPages) { teacherPage = p; renderTeachersPage(); }
+    });
+
+    $('#teacher-jump-page').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        var totalPages = Math.ceil(allTeachersData.length / teacherPageSize) || 1;
+        var v = parseInt(this.value);
+        if (v > totalPages) this.value = totalPages;
+    }).on('keypress', function(e) {
+        if (e.which === 13) {
+            var totalPages = Math.ceil(allTeachersData.length / teacherPageSize) || 1;
+            var p = parseInt($(this).val()) || 1;
+            if (p >= 1 && p <= totalPages) { teacherPage = p; renderTeachersPage(); }
+            $(this).val('');
+        }
+    });
+});
+</script>
+{% endblock %}

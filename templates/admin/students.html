@@ -94,19 +94,29 @@ $(function() {
     $('#search-input').on('input', loadStudents);
     $('#form-name').on('input', function() { $('#form-account-name').val($(this).val()); });
 
+    function resetClassSelect() {
+        $('#form-class-seq').val('');
+        $('#form-student-no').val('');
+    }
+
     $('#form-college').on('change', function() {
         var college = $(this).val();
         var $major = $('#form-major');
         $major.empty();
-        if (!college) { $major.html('<option value="">请先选择学院</option>').prop('disabled', true); clearStudentNo(); return; }
+        resetClassSelect();
+        if (!college) { $major.html('<option value="">请先选择学院</option>').prop('disabled', true); return; }
         api.getMajors({college_code: college}).then(function(majors) {
             $major.prop('disabled', false).append('<option value="">请选择专业</option>');
             majors.forEach(function(m) { $major.append('<option value="' + m.code + '">' + m.name + '</option>'); });
         });
-        clearStudentNo();
     });
 
-    $('#form-major').on('change', refreshStudentNo);
+    $('#form-major').on('change', function() {
+        var college = $('#form-college').val();
+        var major = $(this).val();
+        if (!college || !major) { resetClassSelect(); return; }
+        refreshStudentNo();
+    });
 
     $('#btn-add-student').click(function() {
         $('#edit-student-id').val('');
@@ -115,7 +125,7 @@ $(function() {
         $('#form-college').val('');
         $('#form-enrollment-year').val(new Date().getFullYear());
         $('#form-major').html('<option value="">请先选择学院</option>').prop('disabled', true);
-        clearStudentNo();
+        resetClassSelect();
         $('#form-account-name').val('');
         $('#account-section').show();
         $('.field-error').text('');
@@ -137,6 +147,7 @@ $(function() {
         };
         $('.field-error').text('');
         var ok = true;
+        if (!data.student_no) { showToast('请选择学院和专业以自动生成学号', 'warning'); ok = false; }
         if (!data.name) { $('#err-name').text('请输入姓名'); ok = false; }
         if (!data.gender) { $('#err-gender').text('请选择性别'); ok = false; }
         if (!data.college_code) { $('#err-college').text('请选择学院'); ok = false; }
@@ -144,9 +155,9 @@ $(function() {
         if (!data.phone) { $('#err-phone').text('请输入电话'); ok = false; }
         if (!ok) { showToast('还有必填项未填写', 'warning'); return; }
         if (id) {
-            api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); showToast('修改成功', 'success'); });
+            api.updateStudent(id, data).then(function() { $('#student-modal').modal('hide'); loadStudents(); showToast('修改成功', 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '修改失败'; showToast(m, 'danger'); });
         } else {
-            api.addStudent(data).then(function(res) { $('#student-modal').modal('hide'); loadStudents(); showToast(res.message, 'success'); });
+            api.addStudent(data).then(function(res) { $('#student-modal').modal('hide'); loadStudents(); showToast(res.message, 'success'); }).fail(function(xhr) { var m = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '添加失败'; showToast(m, 'danger'); });
         }
     });
 
@@ -160,13 +171,13 @@ $(function() {
                 $('#form-enrollment-year').val(s.enrollment_year || '');
                 $('#form-college').val(s.college_code || '').trigger('change');
                 var targetMajor = s.major_code || '';
-                var check = setInterval(function() {
+                var checkMajor = setInterval(function() {
                     if ($('#form-major option').length > 1) {
-                        clearInterval(check);
-                        $('#form-major').val(targetMajor);
+                        clearInterval(checkMajor);
+                        $('#form-major').val(targetMajor).trigger('change');
                     }
                 }, 50);
-                setTimeout(function() { clearInterval(check); }, 5000);
+                setTimeout(function() { clearInterval(checkMajor); }, 5000);
                 $('#form-student-no').val(s.student_no);
                 $('#form-class-seq').val(s.student_no.substring(6, 8));
                 $('#form-name').val(s.name);
@@ -183,8 +194,6 @@ $(function() {
         api.deleteStudent($(this).data('id')).then(function() { loadStudents(); });
     });
 
-    function clearStudentNo() { $('#form-student-no').val(''); $('#form-class-seq').val(''); }
-
     function initForm() {
         $('#form-enrollment-year').val(new Date().getFullYear());
         api.getColleges().then(function(colleges) {
@@ -198,8 +207,8 @@ $(function() {
         var year = $('#form-enrollment-year').val();
         var college = $('#form-college').val();
         var major = $('#form-major').val();
-        if (!year || !college || !major) { clearStudentNo(); return; }
-        api.getNextStudentNo({ year: year, college: college, major: major, 'class': '01' }).then(function(res) {
+        if (!year || !college || !major) { $('#form-student-no').val(''); return; }
+        api.getNextStudentNo({ year: year, college: college, major: major }).then(function(res) {
             if (res.error) { showToast(res.error, 'danger'); return; }
             $('#form-student-no').val(res.student_no);
             $('#form-class-seq').val(res.class_seq);

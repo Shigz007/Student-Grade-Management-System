@@ -57,12 +57,14 @@ function checkAuth() {
     if (path === rolePrefix) $('#nav-dashboard').addClass('active');
     if (path === rolePrefix + '/students') $('#nav-students').addClass('active');
     if (path === rolePrefix + '/grades') $('#nav-grades').addClass('active');
+    if (path === rolePrefix + '/teachers') $('#nav-teachers').addClass('active');
 
     // Page title
     var titles = {};
     titles[rolePrefix] = '仪表盘';
     titles[rolePrefix + '/students'] = '学生管理';
     titles[rolePrefix + '/grades'] = '成绩管理';
+    titles[rolePrefix + '/teachers'] = '教师管理';
     $('#page-title').text(titles[path] || '');
 
     return true;
@@ -83,11 +85,12 @@ $(function() {
         var confirmPw = $('#profile-confirm-pw').val();
 
         var changingPw = oldPw || newPw || confirmPw;
-        var changingName = newName !== '' && newName !== user.username;
+        var changingName = newName !== user.username;
 
         $('#profile-modal .field-error').text('');
 
-        if (!changingName && !changingPw) { $('#profile-modal').modal('hide'); return; }
+        if (!changingName && !changingPw) { showToast('保存成功', 'success'); $('#profile-modal').modal('hide'); return; }
+        if (!newName) { showToast('用户名不能为空', 'warning'); return; }
 
         var ok = true;
         var errors = [];

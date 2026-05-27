@@ -46,6 +46,13 @@ var api = {
     getNextStudentNo: function(params) { return this.get('/api/students/next-no', params); },
     getClasses: function(params) { return this.get('/api/students/classes', params); },
 
+    // Teachers
+    getTeachers: function(params) { return this.get('/api/teachers', params); },
+    addTeacher: function(data) { return this.post('/api/teachers', data); },
+    updateTeacher: function(id, data) { return this.put('/api/teachers/' + id, data); },
+    deleteTeacher: function(id) { return this.del('/api/teachers/' + id); },
+    getMyClasses: function() { return this.get('/api/teachers/me/classes'); },
+
     // Auth
     updateProfile: function(data) { return this.put('/api/me', data); },
     changePassword: function(data) { return this.put('/api/me/password', data); },

@@ -39,7 +39,7 @@
     <div class="card-body p-0">
         <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>课程</th><th>学院</th><th>成绩</th><th>学期</th><th>时间</th></tr></thead>
+            <thead><tr><th>课程</th><th>成绩</th><th>专业</th><th>学院</th><th>学期</th><th>时间</th></tr></thead>
             <tbody id="grade-table"></tbody>
         </table>
         </div>
@@ -117,9 +117,9 @@ $(function() {
         pageGrades.forEach(function(g) {
             var sem = (g.semester_year || '') + (g.semester_term ? ' 第' + g.semester_term + '学期' : '');
             var badgeClass = g.score >= 90 ? 'success' : (g.score >= 60 ? 'primary' : 'danger');
-            html += '<tr><td>' + g.course_name + '</td><td>' + (g.college_name || '') + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td></tr>';
+            html += '<tr><td>' + g.course_name + '</td><td><span class="badge badge-' + badgeClass + '">' + g.score + '</span></td><td>' + (g.major_name || '') + '</td><td>' + (g.college_name || '') + '</td><td><small>' + (sem || '-') + '</small></td><td><small>' + (g.created_at || '') + '</small></td></tr>';
         });
-        $('#grade-table').html(html || '<tr><td colspan="5" class="text-center text-muted">暂无成绩</td></tr>');
+        $('#grade-table').html(html || '<tr><td colspan="6" class="text-center text-muted">暂无成绩</td></tr>');
         var end = Math.min(start + gradePageSize, total);
         $('#grade-page-info').text(total ? '第 ' + (start + 1) + '-' + end + ' 条，共 ' + total + ' 条' : '');
         var phtml = '';

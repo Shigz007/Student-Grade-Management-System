@@ -38,6 +38,11 @@ def admin_grades():
     return render_template('admin/grades.html')
 
 
+@app.route('/admin/teachers')
+def admin_teachers():
+    return render_template('admin/teachers.html')
+
+
 # === Teacher ===
 @app.route('/teacher')
 def teacher_dashboard():
